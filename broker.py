@@ -7,17 +7,22 @@ from hbmqtt.mqtt.constants import QOS_1
 logger = logging.getLogger(__name__)
 
 config = {
-    'listeners': {
-        'default': {
-            'type': 'tcp',
-            'bind': 'localhost:9999'    # 0.0.0.0:1883
-        }
-    },
-    'sys_interval': 10,
-    'topic-check': {
-        'enabled': False
+        'listeners': {
+            'default': {
+                'max-connections': 50000,
+                'bind': 'localhost:9999',    # 0.0.0.0:1883
+                'type': 'tcp',
+            }
+        },
+        'auth': {
+            'allow-anonymous': True
+        },
+        'plugins': ['auth_anonymous'],
+        'topic-check': {
+            'enabled': True,
+            'plugins': ['topic_taboo'],
+        },
     }
-}
 
 broker = Broker(config)
 
