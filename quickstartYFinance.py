@@ -62,6 +62,10 @@ msft.options
 opt = msft.option_chain('2021-06-04')
 # data available via: opt.calls, opt.puts
 
+#controllo ultimo timestamp e parto a scaricare da quella data+1
+
+
+
 #ciclo for per ogni azienda, mando richiesta e salvo su db
 data = yf.download(  # or pdr.get_data_yahoo(...
         # tickers list or string as well
@@ -110,12 +114,16 @@ mycol = mydb["MarketData"]
 
 data.reset_index(inplace=True) 
 data_dict = data.to_dict("records") 
-#mycol.insert_one({"index":"SPY","data":data_dict})
+print(data_dict)
+i = 0
+for i in range(len(data_dict)):
+    
+   mycol.insert_one(data_dict[i])
 
-mycol.update_one(
+""" mycol.update_one(
     { "index": "SPY" },
     { "$push": data_dict  }
-) 
+)  """
 
 #mydict = { "name": "John", "address": "Highway 37", "età" : "324" }
 
