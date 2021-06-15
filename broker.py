@@ -35,7 +35,7 @@ def brokerGetMessage():
     C = MQTTClient()
     yield from C.connect('mqtt://localhost:9999/')
     yield from C.subscribe([
-        ("LINTANGtopic/test", QOS_1)
+        ("Symbol", QOS_1)
     ])
     logger.info('Subscribed!')
     try:

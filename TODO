@@ -1,0 +1,19 @@
+Decidere:
+    - Come si dividono le aziende:
+        - Le divide il master? Genera coppia chiave valore, dove chiave è id nodo a cui assegna aziende e valore è array aziende
+        - Se le dividono i nodi? Allora i nodi devono sapere quanti sono 
+    - Numero di nodi (chiedere?)
+
+Fare:
+    - Fix invio messaggio master -> array2string non va bene perchè lo salva come stringa esattamente come la stampa (['AACG', 'AACQ', "AACQU',...,'ZTS", 'ZUO', 'ZYME'])
+    - Sistemare gestione dei messaggi del master (non prende int done, perchè?)
+        - Capire quel on_message se si può fare sequenziale tipo bloccante
+    - Elaborazione dati da parte del master
+    - Nodi dovrebbero essere a posto (una volta deciso come dividere le aziende)
+
+Chiedere:
+    - Giusto come utilizziamo MongoDB? Per ora una collection per ogni azienda, dove gli item sono le singole rige scaricate
+    - Per ora prove su piccole quantità di dati, come possiamo usare cluster? Non usiamo più localhost ma come si dovrebbe fare? boh boh
+    - Numero di nodi (decidere?)
+
+
