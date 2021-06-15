@@ -1,85 +1,42 @@
 import pandas as pd
 import yfinance as yf
 import json 
+import pymongo
+from datetime import datetime
 
+myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+mydb = myclient["MarketDB"]
 
-msft = yf.Ticker("MSFT")
+stocklist = ['AAPL','GOOG','FB','AMZN','COP'] #lista di ticker ricevuta da coord
 
-# get stock info
-msft.info
-
-# get historical market data
-hist = msft.history(period="max")
-
-# show actions (dividends, splits)
-msft.actions
-
-# show dividends
-msft.dividends
-
-# show splits
-msft.splits
-
-# show financials
-msft.financials
-msft.quarterly_financials
-
-# show major holders
-msft.major_holders
-
-# show institutional holders
-msft.institutional_holders
-
-# show balance sheet
-msft.balance_sheet
-msft.quarterly_balance_sheet
-
-# show cashflow
-msft.cashflow
-msft.quarterly_cashflow
-
-# show earnings
-msft.earnings
-msft.quarterly_earnings
-
-# show sustainability
-msft.sustainability
-
-# show analysts recommendations
-msft.recommendations
-
-# show next event (earnings, etc)
-msft.calendar
-
-# show ISIN code - *experimental*
-# ISIN = International Securities Identification Number
-msft.isin
-
-# show options expirations
-msft.options
-
-# get option chain for specific expiration
-opt = msft.option_chain('2021-06-04')
-# data available via: opt.calls, opt.puts
-
-#controllo ultimo timestamp e parto a scaricare da quella data+1
-
-
+#controllo quando ho fatto l'ultimo aggiornamento
+mycol = mydb[stocklist[0]]
+last_doc = mycol.find_one(
+  sort=[( '_id', pymongo.DESCENDING )]
+)
+print(last_doc)
+if (last_doc != None):
+    last_date = last_doc["Datetime"]
+else:
+    last_date = datetime(2021, 5, 10) #impostare default
+print(last_date)
 
 #ciclo for per ogni azienda, mando richiesta e salvo su db
 data = yf.download(  # or pdr.get_data_yahoo(...
         # tickers list or string as well
-        tickers = "SPY",
+        tickers = stocklist,
 
         # use "period" instead of start/end
         # valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
         # (optional, default is '1mo')
-        period = "5d",
+        #period = "5d",
+        start=last_date,  #end def is now
+        
 
         # fetch data by interval (including intraday if period < 60 days)
         # valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
         # (optional, default is '1d')
-        interval = "90m",
+        interval = "5m",
 
         # group by ticker (to access via data['SPY'])
         # (optional, default is 'column')
@@ -102,32 +59,16 @@ data = yf.download(  # or pdr.get_data_yahoo(...
         proxy = None
     )
 
-print(data)
+#print(data)
 
-
-
-import pymongo
-
-myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-mydb = myclient["MarketDB"]
-mycol = mydb["MarketData"]
-
-data.reset_index(inplace=True) 
-data_dict = data.to_dict("records") 
-print(data_dict)
-i = 0
-for i in range(len(data_dict)):
+for ticker in stocklist:
     
-   mycol.insert_one(data_dict[i])
-
-""" mycol.update_one(
-    { "index": "SPY" },
-    { "$push": data_dict  }
-)  """
-
-#mydict = { "name": "John", "address": "Highway 37", "età" : "324" }
-
-#x = mycol.insert_many(data.json())
-
-
-
+    mycol = mydb[ticker]
+    data_tick = data[ticker]
+    #print(data_spy)
+    data_tick.reset_index(inplace=True) 
+    data_dict = data_tick.to_dict("records") 
+    #print(data_dict)
+    i = 0
+    for i in range(len(data_dict)):
+        mycol.insert_one(data_dict[i]) 
