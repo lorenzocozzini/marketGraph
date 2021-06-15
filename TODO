@@ -3,6 +3,7 @@ Decidere:
         - Le divide il master? Genera coppia chiave valore, dove chiave è id nodo a cui assegna aziende e valore è array aziende
         - Se le dividono i nodi? Allora i nodi devono sapere quanti sono 
     - Numero di nodi (chiedere?)
+    - data di partenza per scaricare
 
 Fare:
     - Fix invio messaggio master -> array2string non va bene perchè lo salva come stringa esattamente come la stampa (['AACG', 'AACQ', "AACQU',...,'ZTS", 'ZUO', 'ZYME'])
