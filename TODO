@@ -14,6 +14,7 @@ Fare:
 Chiedere:
     - Giusto come utilizziamo MongoDB? Per ora una collection per ogni azienda, dove gli item sono le singole rige scaricate
     - Per ora prove su piccole quantità di dati, come possiamo usare cluster? Non usiamo più localhost ma come si dovrebbe fare? boh boh
-    - Numero di nodi (decidere?)
+    - Numero di nodi (decidere?) -> Che facciamo? un numero direi non troppo piccolo altrimenti facciamo troppe richieste da un singolo nodo e forse lo sovraccarichiamo? una roba come 12?
+    - Va bene se usiamo la libreria yahoo? lui ha detto di usare ciò che ci piace, ma meglio chiedere?
 
 
