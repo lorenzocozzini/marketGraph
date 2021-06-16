@@ -6,21 +6,18 @@ import yfinance as yf
 import pymongo
 from datetime import datetime
 import numpy as np
+import json
 
 def get_tickers(message, idNode):
+    print(type(message)) #str
+    #print(json.loads(message))
     message = message[2:-2]
-    list_msg = message.split("','")
+    list_msg = message.split('", "')
     print(list_msg) #['AACG', 'AACQ', "AACQU',...,'ZTS", 'ZUO', 'ZYME']
     
-    print(list_msg[0:5]) #['AACG', 'AACQ', "AACQU',...,'ZTS", 'ZUO', 'ZYME'] -> il to string che fa il master nel publish non va bene
-    
-    #sub_list = list_msg[0:5] #qui leggo solo i primi 5, trovare modo intelligente per dividere (forse meglio fatto da master)
-                            #nodi sanno quanti sono? se no meglio da master da bo
-    sub_list = []
+    sub_list = list_msg[0:5] #qui leggo solo i primi 5, trovare modo intelligente per dividere (forse meglio fatto da master) TODO
     print(sub_list)
     return sub_list
-
-
 
 def update_data(stocklist):
     myclient = pymongo.MongoClient("mongodb://localhost:27017/")
@@ -34,13 +31,13 @@ def update_data(stocklist):
     if (last_doc != None):
         last_date = last_doc["Datetime"]
     else:
-        last_date = datetime(2021, 6, 10) #impostare default
+        last_date = datetime(2021, 6, 10) #TODO impostare default
     print(last_date)
 
     data = yf.download(
         tickers = stocklist,
         start=last_date,  #end def is now
-        interval = "5m",
+        interval = "30m",
         group_by = 'ticker',
         prepost = True,
         threads = True,
@@ -71,11 +68,12 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe("Symbol")
 
 def on_message(client, userdata, message):
-    symbol_string = get_tickers(message.payload.decode(), id)
-    print(symbol_string)
+    print(message.payload.decode())
+    symbol_string = get_tickers(message.payload.decode(), id) 
     #aggiorna dati
     update_data(symbol_string)
     #informa master quando hai fatto
+    print("Fine download")
     client.publish("Node", "DONE")
 
 while True:
