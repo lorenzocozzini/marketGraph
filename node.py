@@ -20,7 +20,7 @@ def get_tickers(message, idNode):
     return sub_list
 
 def update_data(stocklist):
-    myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+    myclient = pymongo.MongoClient("mongodb://160.78.28.56:27017/")
     mydb = myclient["MarketDB"]
     #controllo quando ho fatto l'ultimo aggiornamento
     mycol = mydb[stocklist[0]]
@@ -56,7 +56,7 @@ def update_data(stocklist):
             
 
 client = mqtt.Client()
-client.connect('localhost', 9999)
+client.connect('160.78.100.132', 9999)
 id = int(sys.argv[1])    #py node.py 0
 
 b_msg = False

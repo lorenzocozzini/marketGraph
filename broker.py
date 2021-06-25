@@ -10,7 +10,7 @@ config = {
         'listeners': {
             'default': {
                 'max-connections': 50000,
-                'bind': 'localhost:9999',    # 0.0.0.0:1883
+                'bind': '160.78.100.132:9999',    # 0.0.0.0:1883
                 'type': 'tcp',
             }
         },
@@ -33,7 +33,7 @@ def startBroker():
 @asyncio.coroutine
 def brokerGetMessage():
     C = MQTTClient()
-    yield from C.connect('mqtt://localhost:9999/')
+    yield from C.connect('mqtt://160.78.100.132:9999/')
     yield from C.subscribe([
         ("Symbol", QOS_1),
         ("Node", QOS_1)

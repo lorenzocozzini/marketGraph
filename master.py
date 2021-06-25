@@ -17,7 +17,7 @@ message = json.dumps(symbol_array.tolist())
 print(message)
 
 client = mqtt.Client()
-client.connect('localhost', 9999)
+client.connect('160.78.100.132', 9999)
 client.publish("Symbol", message)  #NB: prima devono partire i nodi, altrimenti non leggono il messaggio pubblica
 
 #dopo si iscrive a topic di tutti i nodi (o può essere anche lo stesso topic?)
@@ -49,3 +49,4 @@ print("Fine scambio msg")
 #TODO: elaborazione dati
 
 #poi aspetta tot prima di ricominciare
+    
