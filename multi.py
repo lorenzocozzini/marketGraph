@@ -6,7 +6,7 @@ import pandas as pd
 
 import utils
 import shared
-import ticker as ticker #TODO CAMBIA
+from ticker import Ticker
 
 
 def download(tickers, start=None, end=None, actions=False, threads=True,
@@ -158,7 +158,7 @@ def _download_one(ticker, start=None, end=None,
                   actions=False, period="max", interval="1d",
                   prepost=False, proxy=None, rounding=False):
 
-    return ticker.Ticker(ticker).history(period=period, interval=interval,
+    return Ticker(ticker).history(period=period, interval=interval,
                                   start=start, end=end, prepost=prepost,
                                   actions=actions, auto_adjust=auto_adjust,
                                   back_adjust=back_adjust, proxy=proxy,
