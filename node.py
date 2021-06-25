@@ -1,12 +1,11 @@
 # subscriber
 import paho.mqtt.client as mqtt
 import sys
-
-import yfinance as yf
 import pymongo
 from datetime import datetime
 import numpy as np
-import json
+#importo tutto il file per il download
+import multi as multi
 
 def get_tickers(message, idNode):
     print(type(message)) #str
@@ -34,7 +33,7 @@ def update_data(stocklist):
         last_date = datetime(2021, 6, 10) #TODO impostare default
     print(last_date)
 
-    data = yf.download(
+    data = multi.download(
         tickers = stocklist,
         start=last_date,  #end def is now
         interval = "30m",

@@ -1,6 +1,7 @@
 from __future__ import print_function
 
-from . import Ticker, multi
+import ticker as ticker
+import multi as multi
 # from collections import namedtuple as _namedtuple
 
 
@@ -16,7 +17,7 @@ class Tickers():
         ticker_objects = {}
 
         for ticker in self.symbols:
-            ticker_objects[ticker] = Ticker(ticker)
+            ticker_objects[ticker] = ticker.Ticker(ticker)
 
         self.tickers = ticker_objects
         # self.tickers = _namedtuple(
