@@ -13,40 +13,6 @@ def download(tickers, start=None, end=None, actions=False, threads=True,
              group_by='column', auto_adjust=False, back_adjust=False,
              progress=True, period="max", show_errors=True, interval="1d", prepost=False,
              proxy=None, rounding=False, **kwargs):
-    """Download yahoo tickers
-    :Parameters:
-        tickers : str, list
-            List of tickers to download
-        period : str
-            Valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
-            Either Use period parameter or use start and end
-        interval : str
-            Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
-            Intraday data cannot extend last 60 days
-        start: str
-            Download start date string (YYYY-MM-DD) or _datetime.
-            Default is 1900-01-01
-        end: str
-            Download end date string (YYYY-MM-DD) or _datetime.
-            Default is now
-        group_by : str
-            Group by 'ticker' or 'column' (default)
-        prepost : bool
-            Include Pre and Post market data in results?
-            Default is False
-        auto_adjust: bool
-            Adjust all OHLC automatically? Default is False
-        actions: bool
-            Download dividend + stock splits data. Default is False
-        threads: bool / int
-            How many threads to use for mass downloading. Default is True
-        proxy: str
-            Optional. Proxy server URL scheme. Default is None
-        rounding: bool
-            Optional. Round values to 2 decimal places?
-        show_errors: bool
-            Optional. Doesn't print errors if True
-    """
 
     # create ticker list
     tickers = tickers if isinstance(
