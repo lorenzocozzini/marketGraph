@@ -19,8 +19,8 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
     if (data['chart']['error'] != None):
         print(ticker + ' ' +data['chart']['error']['code'])
         return
-        
-    if (len(data['chart']['result'][0]['indicators']['quote']) == 0):
+
+    if (data['chart']['result'][0]['indicators']['quote'][0]== "{}"):
         print(ticker + ' already updated')
         return
 
