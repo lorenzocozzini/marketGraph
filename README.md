@@ -6,6 +6,7 @@ pip install pandas
 pip install paho-mqtt
 pip install amqtt
 pip install hbmqtt
+pip install pymysql
 ```
 
 Start broker
