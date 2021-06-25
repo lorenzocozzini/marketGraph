@@ -6,13 +6,13 @@ from datetime import datetime
 import utils
 
 def get_tickers(message, idNode):
-    print(type(message)) #str
-    #print(json.loads(message))
+    print(type(message)) 
     message = message[2:-2]
     list_msg = message.split('", "')
-    print(list_msg) #['AACG', 'AACQ', "AACQU',...,'ZTS", 'ZUO', 'ZYME']
+    print(list_msg) 
     
     sub_list = list_msg[0:5] #qui leggo solo i primi 5, trovare modo intelligente per dividere (forse meglio fatto da master) TODO
+    print("Downloading: ")
     print(sub_list)
     return sub_list
 
@@ -32,7 +32,7 @@ def update_data(stocklist):
     print(last_date)
 
     for ticker in stocklist:
-        utils.download_finance(ticker=ticker, interval='1d', period1=last_date)            
+        utils.download_finance(ticker=ticker, interval='1d', period1=last_date)
 
 client = mqtt.Client()
 client.connect('160.78.100.132', 9999)

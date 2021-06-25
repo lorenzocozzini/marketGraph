@@ -1,6 +1,7 @@
 import time
 import datetime
 from datetime import datetime
+import pandas as pd
 import pymongo
 import json
 import requests
@@ -26,7 +27,9 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
     for i in data['chart']['result'][0]['timestamp']:
         data = datetime.fromtimestamp(i)
         data = data.strftime("%Y-%m-%dT%H:%M:%S")
-        timestamp.append(data)
+        datetime = pd.to_datetime(i, unit="s")
+        print(datetime)
+        timestamp.append(datetime)
 
 
     myclient = pymongo.MongoClient("mongodb://160.78.28.56:27017/")  #160.78.28.56
