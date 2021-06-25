@@ -16,6 +16,10 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
     data = json.loads(response.content.decode())
     print(data)
 
+    if (data['chart']['error'] != None):
+        print(ticker + ' ' +data['chart']['error']['code'])
+        return
+
     open = data['chart']['result'][0]['indicators']['quote'][0]['open']
     high = data['chart']['result'][0]['indicators']['quote'][0]['high']
     low = data['chart']['result'][0]['indicators']['quote'][0]['low']
