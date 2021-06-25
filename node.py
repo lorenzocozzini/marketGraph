@@ -11,7 +11,8 @@ def get_tickers(message, id_node, num_nodes):
     message = message[2:-2]
     list_msg = message.split('", "')
     len_list = len(list_msg)
-    num_records = modf(len_list/num_nodes)
+
+    fraz, num_records = modf(len_list/num_nodes)
     #se non è l'ultimo 
     if (id_node + 1 < num_nodes):
         last_index = num_records*(id_node + 1)
