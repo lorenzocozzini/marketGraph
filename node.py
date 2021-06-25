@@ -3,9 +3,7 @@ import paho.mqtt.client as mqtt
 import sys
 import pymongo
 from datetime import datetime
-import numpy as np
-#importo tutto il file per il download
-import multi as multi
+import utils
 
 def get_tickers(message, idNode):
     print(type(message)) #str
@@ -19,7 +17,7 @@ def get_tickers(message, idNode):
     return sub_list
 
 def update_data(stocklist):
-    myclient = pymongo.MongoClient("mongodb://160.78.28.56:27017/")
+    myclient = pymongo.MongoClient("mongodb://160.78.28.56:27017/") #160.78.28.56
     mydb = myclient["MarketDB"]
     #controllo quando ho fatto l'ultimo aggiornamento
     mycol = mydb[stocklist[0]]
@@ -33,26 +31,8 @@ def update_data(stocklist):
         last_date = datetime(2021, 6, 10) #TODO impostare default
     print(last_date)
 
-    data = multi.download(
-        tickers = stocklist,
-        start=last_date,  #end def is now
-        interval = "30m",
-        group_by = 'ticker',
-        prepost = True,
-        threads = True,
-        proxy = None
-    )
-
-    #print(data)
     for ticker in stocklist:
-        mycol = mydb[ticker]
-        data_tick = data[ticker]
-        data_tick.reset_index(inplace=True) 
-        data_dict = data_tick.to_dict("records") 
-        i = 0
-        for i in range(len(data_dict)):
-            mycol.insert_one(data_dict[i]) 
-            
+        utils.download_finance(ticker=ticker, interval='1d', period1=last_date)            
 
 client = mqtt.Client()
 client.connect('160.78.100.132', 9999)

@@ -10,16 +10,27 @@ Fare:
     - Sistemare gestione dei messaggi del master (non prende int done, perchè?)
         - Capire quel on_message se si può fare sequenziale tipo bloccante
     - Elaborazione dati da parte del master
-    - Nodi dovrebbero essere a posto (una volta deciso come dividere le aziende)
+    - Nodi dovrebbero essere a posto (una volta deciso come dividere le aziende) 
+    - Indirizzi da passare da terminale (indirizzi broker, )
+    - Gestire eventuali fail dei nodi
 
 Chiedere:
-    - Giusto come utilizziamo MongoDB? Per ora una collection per ogni azienda, dove gli item sono le singole rige scaricate
-    - Per ora prove su piccole quantità di dati, come possiamo usare cluster? Non usiamo più localhost ma come si dovrebbe fare? boh boh
+    - Giusto come utilizziamo MongoDB? Per ora una collection per ogni azienda, dove gli item sono le singole rige scaricate OK --> AGGIUNGERE DATI EDLLE AZIENDE SU UNA COLLECTION
+    - Per ora prove su piccole quantità di dati, come possiamo usare cluster? Non usiamo più localhost ma come si dovrebbe fare? boh boh OK
     - Numero di nodi (decidere?) -> Che facciamo? un numero direi non troppo piccolo altrimenti facciamo troppe richieste da un singolo nodo e forse lo sovraccarichiamo? una roba come 12?
-    - Va bene se usiamo la libreria yahoo? lui ha detto di usare ciò che ci piace, ma meglio chiedere?
-    - Intervallo adeguato? 10 min, 30 min?
-    - Significato nan
+    - Va bene se usiamo la libreria yahoo? lui ha detto di usare ciò che ci piace, ma meglio chiedere? ---> FARE NOI
+    - Intervallo adeguato? 10 min, 30 min?  ------> OGNI ORA
+    - Significato nan ----> FARE LIBRERIA NOI (possibile soluzione, tenere dati precedenti se c'è nan)
     - Nodi oltre a scaricare devono fare qualcosa? Preelaborazioni?
+        -------> per calcolo correlazioni fa tutto master , livello multi process (no thread in python!)
+                - o nodi iniziano a calcolare le loro correlazioni
+
+
+
+    - NB ricorda di far chiudere porte al pc per MongoDB alla fine!
+        netsh advfirewall reset
     
+
+
 
 

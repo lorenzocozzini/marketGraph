@@ -5,7 +5,6 @@
 
 import paho.mqtt.client as mqtt
 import pandas as pd
-import numpy as np
 import json
 
 df = pd.read_csv('us_market.csv')
