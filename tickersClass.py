@@ -1,9 +1,6 @@
 from __future__ import print_function
-
 import ticker as ticker
 import multi as multi
-# from collections import namedtuple as _namedtuple
-
 
 class Tickers():
 

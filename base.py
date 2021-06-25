@@ -2,21 +2,16 @@ from __future__ import print_function
 import time as _time
 import datetime as _datetime
 import requests as _requests
-import pandas as _pd
-import numpy as _np
+import pandas as pd
+import numpy as np
+import utils
+import shared
 
 try:
     from urllib.parse import quote as urlencode
 except ImportError:
     from urllib import quote as urlencode
 
-import utils
-
-# import json as _json
-# import re as _re
-# import sys as _sys
-
-import shared
 
 
 class TickerBase():
@@ -169,7 +164,7 @@ class TickerBase():
         # 2) fix weired bug with Yahoo! - returning 60m for 30m bars
         if interval.lower() == "30m":
             quotes2 = quotes.resample('30T')
-            quotes = _pd.DataFrame(index=quotes2.last().index, data={
+            quotes = pd.DataFrame(index=quotes2.last().index, data={
                 'Open': quotes2['Open'].first(),
                 'High': quotes2['High'].max(),
                 'Low': quotes2['Low'].min(),
@@ -192,9 +187,9 @@ class TickerBase():
             quotes = utils.back_adjust(quotes)
 
         if rounding:
-            quotes = _np.round(quotes, data[
+            quotes = np.round(quotes, data[
                 "chart"]["result"][0]["meta"]["priceHint"])
-        quotes['Volume'] = quotes['Volume'].fillna(0).astype(_np.int64)
+        quotes['Volume'] = quotes['Volume'].fillna(0).astype(np.int64)
 
         quotes.dropna(inplace=True)
 
@@ -202,7 +197,7 @@ class TickerBase():
         dividends, splits = utils.parse_actions(data["chart"]["result"][0], tz)
 
         # combine
-        df = _pd.concat([quotes, dividends, splits], axis=1, sort=True)
+        df = pd.concat([quotes, dividends, splits], axis=1, sort=True)
         df["Dividends"].fillna(0, inplace=True)
         df["Stock Splits"].fillna(0, inplace=True)
 
@@ -215,7 +210,7 @@ class TickerBase():
         elif params["interval"] == "1h":
             pass
         else:
-            df.index = _pd.to_datetime(df.index.date)
+            df.index = pd.to_datetime(df.index.date)
             if tz is not None:
                 df.index = df.index.tz_localize(tz)
             df.index.name = "Date"
@@ -231,16 +226,16 @@ class TickerBase():
 
     def _get_fundamentals(self, kind=None, proxy=None):
         def cleanup(data):
-            df = _pd.DataFrame(data).drop(columns=['maxAge'])
+            df = pd.DataFrame(data).drop(columns=['maxAge'])
             for col in df.columns:
-                df[col] = _np.where(
-                    df[col].astype(str) == '-', _np.nan, df[col])
+                df[col] = np.where(
+                    df[col].astype(str) == '-', np.nan, df[col])
 
             df.set_index('endDate', inplace=True)
             try:
-                df.index = _pd.to_datetime(df.index, unit='s')
+                df.index = pd.to_datetime(df.index, unit='s')
             except ValueError:
-                df.index = _pd.to_datetime(df.index)
+                df.index = pd.to_datetime(df.index)
             df = df.T
             df.columns.name = ''
             df.index.name = 'Breakdown'
@@ -266,7 +261,7 @@ class TickerBase():
         try:
             resp = self.session.get(ticker_url + '/holders')
             resp.raise_for_status()
-            holders = _pd.read_html(resp.content)
+            holders = pd.read_html(resp.content)
         except Exception as e:
             holders = []
 
@@ -285,7 +280,7 @@ class TickerBase():
 
         if self._institutional_holders is not None:
             if 'Date Reported' in self._institutional_holders:
-                self._institutional_holders['Date Reported'] = _pd.to_datetime(
+                self._institutional_holders['Date Reported'] = pd.to_datetime(
                 self._institutional_holders['Date Reported'])
             if '% Out' in self._institutional_holders:
                 self._institutional_holders['% Out'] = self._institutional_holders[
@@ -293,7 +288,7 @@ class TickerBase():
 
         if self._mutualfund_holders is not None:
             if 'Date Reported' in self._mutualfund_holders:
-                self._mutualfund_holders['Date Reported'] = _pd.to_datetime(
+                self._mutualfund_holders['Date Reported'] = pd.to_datetime(
                 self._mutualfund_holders['Date Reported'])
             if '% Out' in self._mutualfund_holders:
                 self._mutualfund_holders['% Out'] = self._mutualfund_holders[
@@ -307,7 +302,7 @@ class TickerBase():
                     if not isinstance(data['esgScores'][item], (dict, list)):
                         d[item] = data['esgScores'][item]
 
-                s = _pd.DataFrame(index=[0], data=d)[-1:].T
+                s = pd.DataFrame(index=[0], data=d)[-1:].T
                 s.columns = ['Value']
                 s.index.name = '%.f-%.f' % (
                     s[s.index == 'ratingYear']['Value'].values[0],
@@ -346,9 +341,9 @@ class TickerBase():
 
         # events
         try:
-            cal = _pd.DataFrame(
+            cal = pd.DataFrame(
                 data['calendarEvents']['earnings'])
-            cal['earningsDate'] = _pd.to_datetime(
+            cal['earningsDate'] = pd.to_datetime(
                 cal['earningsDate'], unit='s')
             self._calendar = cal.T
             self._calendar.index = utils.camel2title(self._calendar.index)
@@ -358,9 +353,9 @@ class TickerBase():
 
         # analyst recommendations
         try:
-            rec = _pd.DataFrame(
+            rec = pd.DataFrame(
                 data['upgradeDowngradeHistory']['history'])
-            rec['earningsDate'] = _pd.to_datetime(
+            rec['earningsDate'] = pd.to_datetime(
                 rec['epochGradeDate'], unit='s')
             rec.set_index('earningsDate', inplace=True)
             rec.index.name = 'Date'
@@ -399,12 +394,12 @@ class TickerBase():
                 earnings = data['earnings']['financialsChart']
                 earnings['financialCurrency'] = 'USD' if 'financialCurrency' not in data['earnings'] else data['earnings']['financialCurrency']
                 self._earnings['financialCurrency'] = earnings['financialCurrency']
-                df = _pd.DataFrame(earnings['yearly']).set_index('date')
+                df = pd.DataFrame(earnings['yearly']).set_index('date')
                 df.columns = utils.camel2title(df.columns)
                 df.index.name = 'Year'
                 self._earnings['yearly'] = df
 
-                df = _pd.DataFrame(earnings['quarterly']).set_index('date')
+                df = pd.DataFrame(earnings['quarterly']).set_index('date')
                 df.columns = utils.camel2title(df.columns)
                 df.index.name = 'Quarter'
                 self._earnings['quarterly'] = df
