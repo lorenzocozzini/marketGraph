@@ -13,6 +13,7 @@ def get_tickers(message, id_node, num_nodes):
     len_list = len(list_msg)
 
     fraz, num_records = modf(len_list/num_nodes)
+    num_records = int(num_records)
     #se non è l'ultimo 
     if (id_node + 1 < num_nodes):
         last_index = num_records*(id_node + 1)
@@ -36,7 +37,7 @@ def update_data(stocklist):
     if (last_doc != None):
         last_date = last_doc["Datetime"]
     else:
-        last_date = datetime(2021, 6, 10) #TODO impostare default
+        last_date = datetime(2010,1, 1) #TODO impostare default
     print(last_date)
 
     for ticker in stocklist:
