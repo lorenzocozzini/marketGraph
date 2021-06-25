@@ -29,18 +29,18 @@ def update_data(stocklist):
     myclient = pymongo.MongoClient("mongodb://160.78.28.56:27017/") #160.78.28.56
     mydb = myclient["MarketDB"]
     #controllo quando ho fatto l'ultimo aggiornamento
-    mycol = mydb[stocklist[0]]
-    last_doc = mycol.find_one(
-        sort=[( '_id', pymongo.DESCENDING )]
-    )
-    print(last_doc)
-    if (last_doc != None):
-        last_date = last_doc["Datetime"]
-    else:
-        last_date = datetime(2010,1, 1) #TODO impostare default
-    print(last_date)
-
     for ticker in stocklist:
+        mycol = mydb[ticker]
+        last_doc = mycol.find_one(
+        sort=[( '_id', pymongo.DESCENDING )]
+        )
+        print(last_doc)
+        if (last_doc != None):
+            last_date = last_doc["Datetime"]
+        else:
+            last_date = datetime(2021, 6, 10) #TODO impostare default
+        print(last_date)
+
         utils.download_finance(ticker=ticker, interval='1d', period1=last_date)
 
 client = mqtt.Client()
