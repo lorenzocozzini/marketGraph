@@ -49,4 +49,3 @@ print("Fine scambio msg")
 #TODO: elaborazione dati
 
 #poi aspetta tot prima di ricominciare
-    
