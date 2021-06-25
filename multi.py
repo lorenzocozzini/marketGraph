@@ -1,8 +1,8 @@
 from __future__ import print_function
 
 import time as _time
-import multitasking as _multitasking
-import pandas as _pd
+import multitasking as mt
+import pandas as pd
 
 import utils
 import shared
@@ -64,8 +64,8 @@ def download(tickers, start=None, end=None, actions=False, threads=True,
     # download using threads
     if threads:
         if threads is True:
-            threads = min([len(tickers), _multitasking.cpu_count() * 2])
-        _multitasking.set_max_threads(threads)
+            threads = min([len(tickers), mt.cpu_count() * 2])
+        mt.set_max_threads(threads)
         for i, ticker in enumerate(tickers):
             _download_one_threaded(ticker, period=period, interval=interval,
                                    start=start, end=end, prepost=prepost,
@@ -102,11 +102,11 @@ def download(tickers, start=None, end=None, actions=False, threads=True,
         return shared._DFS[tickers[0]]
 
     try:
-        data = _pd.concat(shared._DFS.values(), axis=1,
+        data = pd.concat(shared._DFS.values(), axis=1,
                           keys=shared._DFS.keys())
     except Exception:
         _realign_dfs()
-        data = _pd.concat(shared._DFS.values(), axis=1,
+        data = pd.concat(shared._DFS.values(), axis=1,
                           keys=shared._DFS.keys())
 
     if group_by == 'column':
@@ -127,10 +127,10 @@ def _realign_dfs():
 
     for key in shared._DFS.keys():
         try:
-            shared._DFS[key] = _pd.DataFrame(
+            shared._DFS[key] = pd.DataFrame(
                 index=idx, data=shared._DFS[key]).drop_duplicates()
         except Exception:
-            shared._DFS[key] = _pd.concat([
+            shared._DFS[key] = pd.concat([
                 utils.empty_df(idx), shared._DFS[key].dropna()
             ], axis=0, sort=True)
 
@@ -139,7 +139,7 @@ def _realign_dfs():
             ~shared._DFS[key].index.duplicated(keep='last')]
 
 
-@_multitasking.task
+@mt.task
 def _download_one_threaded(ticker, start=None, end=None,
                            auto_adjust=False, back_adjust=False,
                            actions=False, progress=True, period="max",
