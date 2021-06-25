@@ -4,14 +4,21 @@ import sys
 import pymongo
 from datetime import datetime
 import utils
+from math import modf
 
-def get_tickers(message, idNode):
-    print(type(message)) 
+def get_tickers(message, id_node, num_nodes):
+    
     message = message[2:-2]
     list_msg = message.split('", "')
-    print(list_msg) 
-    
-    sub_list = list_msg[0:5] #qui leggo solo i primi 5, trovare modo intelligente per dividere (forse meglio fatto da master) TODO
+    len_list = len(list_msg)
+    num_records = modf(len_list/num_nodes)
+    #se non è l'ultimo 
+    if (id_node + 1 < num_nodes):
+        last_index = num_records*(id_node + 1)
+    #se è l'ultimo
+    else:
+         last_index =len_list
+    sub_list = list_msg[id_node*num_records:last_index] #qui leggo solo i primi 5, trovare modo intelligente per dividere (forse meglio fatto da master) TODO
     print("Downloading: ")
     print(sub_list)
     return sub_list
@@ -36,19 +43,20 @@ def update_data(stocklist):
 
 client = mqtt.Client()
 client.connect('160.78.100.132', 9999)
+#metti passAGGIO IP DA TERMINALE
 id = int(sys.argv[1])    #py node.py 0
-
+n_nodi = int(sys.argv[2]) 
 b_msg = False
 
 print("Node id: " + str(id))
-    
+
 def on_connect(client, userdata, flags, rc):
     print("Connected to a broker!")
     client.subscribe("Symbol")
 
 def on_message(client, userdata, message):
     print(message.payload.decode())
-    symbol_string = get_tickers(message.payload.decode(), id) 
+    symbol_string = get_tickers(message.payload.decode(), id, n_nodi) 
     #aggiorna dati
     update_data(symbol_string)
     #informa master quando hai fatto

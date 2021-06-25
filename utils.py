@@ -27,9 +27,8 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
     for i in data['chart']['result'][0]['timestamp']:
         data = datetime.fromtimestamp(i)
         data = data.strftime("%Y-%m-%dT%H:%M:%S")
-        datetime = pd.to_datetime(i, unit="s")
-        print(datetime)
-        timestamp.append(datetime)
+        datetimeData = pd.to_datetime(i, unit="s")
+        timestamp.append(datetimeData)
 
 
     myclient = pymongo.MongoClient("mongodb://160.78.28.56:27017/")  #160.78.28.56
