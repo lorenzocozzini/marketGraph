@@ -4,6 +4,7 @@ import pandas as pd
 import json
 import pymongo
 import numpy as np
+import utils
 
 def worker():
     df = pd.read_csv('us_market.csv')
@@ -23,15 +24,16 @@ def worker():
         )
         last_doc = list(cursor)
         print(last_doc)
-        #adj_close = last_doc["AdjClose"]
-        #print(adj_close) 
+        #utils.download_finance(ticker=ticker, interval='1d', period1=last_date)
+        adj_close = last_doc["AdjClose"]
+        print(adj_close) 
 
     
 
 
     #calcola correlazione
     #correlation = np.corrcoef(sub_list, adj_close)
-    print (multiprocessing.current_process().name," Worker")
+    #print (multiprocessing.current_process().name," Worker")
     return
 
 if __name__ == '__main__':
