@@ -66,8 +66,8 @@ def on_message(client, userdata, message):
     #aggiorna dati
     update_data(symbol_string)
     #informa master quando hai fatto
-    print("Fine download")
-    client.publish("Node", "DONE")
+    print("Fine download - " + str(id))
+    client.publish("Node", "DONE") # TODO : inviare a server lista di ticker che non è riuscito a scaricare
 
 while True:
     client.on_connect = on_connect
