@@ -1,0 +1,21 @@
+putty.exe -ssh donzelli@160.78.100.133 -pw Piero
+
+cd ../../sowide/donzelli_palomba2
+
+
+python3 broker.py
+
+python3 node.py 0 10
+python3 node.py 1 10
+python3 node.py 2 10
+python3 node.py 3 10
+python3 node.py 4 10
+python3 node.py 5 10
+python3 node.py 6 10
+python3 node.py 7 10
+python3 node.py 8 10
+python3 node.py 9 10
+
+python3 master.py
+
+

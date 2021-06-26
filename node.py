@@ -38,7 +38,7 @@ def update_data(stocklist):
         if (last_doc != None):
             last_date = last_doc["Datetime"]
         else:
-            last_date = datetime(2021, 6, 10) #TODO impostare default
+            last_date = datetime(2010, 1, 1) #TODO impostare default
         print(last_date)
 
         utils.download_finance(ticker=ticker, interval='1d', period1=last_date)
