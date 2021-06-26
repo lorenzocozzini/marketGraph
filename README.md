@@ -16,7 +16,7 @@ py broker.py
 ```
 Start node(s)
 ```
-py node.py [id]
+py node.py [id] [numberOfNodes]
 ```
 Start master
 ```
