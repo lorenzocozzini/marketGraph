@@ -38,7 +38,7 @@ def on_message(client, userdata, message):
 while (done_msg < n_nodes):
     client.on_connect = on_connect
     client.on_message = on_message 
-    print("DONE: "+ str(done_msg))
+    #print("DONE: "+ str(done_msg))
     client.loop_start()    #https://stackoverflow.com/a/62950290
     #in mezzo fare cose che vogliamo
     client.loop_stop()

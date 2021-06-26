@@ -15,10 +15,10 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
     print(query_string)
     response = requests.get(query_string)
     data = json.loads(response.content.decode())
-    print(data)
+    #print(data)
 
     if (data['chart']['error'] != None):
-        print(ticker + ' ' +data['chart']['error']['code'])
+        print(ticker + ' ' + data['chart']['error']['code']) # TODO: aggiungere a lista da restituire a master così poi non ne calcola le correlazioni
         return
 
     #print(data['chart']['result'][0]['indicators']['quote'][0])
