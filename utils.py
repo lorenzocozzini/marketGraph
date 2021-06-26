@@ -8,6 +8,7 @@ import requests
 
 def download_finance(ticker, interval, period1, period2 = datetime.now()):
     period1 = int(time.mktime(period1.timetuple()))
+    period2 = period2.replace(hour=14, minute=30, second=0, microsecond=0)
     period2 = int(time.mktime(period2.timetuple()))
 
     query_string = f'https://query1.finance.yahoo.com/v7/finance/chart/{ticker}?period1={period1}&period2={period2}&interval={interval}&events=history&includeAdjustedClose=true'
