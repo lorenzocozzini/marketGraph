@@ -5,6 +5,7 @@ import pymongo
 from datetime import datetime
 import utils
 from math import modf
+import progressbar
 
 def get_tickers(message, id_node, num_nodes):
     
@@ -20,7 +21,7 @@ def get_tickers(message, id_node, num_nodes):
     #se è l'ultimo
     else:
          last_index =len_list
-    sub_list = list_msg[id_node*num_records:last_index] #qui leggo solo i primi 5, trovare modo intelligente per dividere (forse meglio fatto da master) TODO
+    sub_list = list_msg[id_node*num_records:last_index] 
     print("Downloading: ")
     print(sub_list)
     return sub_list
@@ -28,7 +29,9 @@ def get_tickers(message, id_node, num_nodes):
 def update_data(stocklist):
     myclient = pymongo.MongoClient("mongodb://160.78.28.56:27017/") #160.78.28.56
     mydb = myclient["MarketDB"]
+    bar = progressbar.ProgressBar(maxval=len(stocklist)).start()
     #controllo quando ho fatto l'ultimo aggiornamento
+    i = 0
     for ticker in stocklist:
         mycol = mydb[ticker]
         last_doc = mycol.find_one(
@@ -38,10 +41,11 @@ def update_data(stocklist):
         if (last_doc != None):
             last_date = last_doc["Datetime"]
         else:
-            last_date = datetime(2010, 1, 1) #TODO impostare default
+            last_date = datetime(2010, 1, 1) 
         print(last_date)
-
         utils.download_finance(ticker=ticker, interval='1d', period1=last_date)
+        bar.update(i)
+        i += 1
 
 client = mqtt.Client()
 client.connect('160.78.100.132', 9999)
