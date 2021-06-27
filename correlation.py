@@ -53,24 +53,24 @@ def get_correlation(adj_close_1, adj_close_2):
     corr_mantegna = (arg1 -arg2)/sqrt(arg3*arg4)
     return corr_mantegna
 
-def worker(list):
+def worker(list, return_list):
     id = int(multiprocessing.current_process().name)
     print(list)
     num_records = int(len(list)/5)
+    corr_list = []
     #scarica i dati e calcola correlazioni
     for i in range(num_records*id, num_records*(id+1)):
         print("Ticker 1: " + list[i])
         adj_close_1 = get_adj_close(list[i])
         print("adj_close_1", adj_close_1)
         if (len(adj_close_1) == T):                 #calcolo correlazione solo se ho i dati per tutto l'intervallo
-            G.add_node(list[i])
+            global G
             for j in range(i+1, len(list)):
                 print("Ticker 2: " + list[j])
                 adj_close_2 = []
                 adj_close_2 = get_adj_close(list[j])
                 print("adj_close_2", adj_close_2)
                 if (len(adj_close_2) == T):          #calcolo correlazione solo se ho i dati per tutto l'intervallo
-                    G.add_node(list[j])
                     #calcola correlazione
                     print("Correlation " + list[i] + " - " + list[j] + ":")
                     correlation = np.corrcoef(adj_close_1, adj_close_2)
@@ -81,12 +81,16 @@ def worker(list):
                     print(str(corr_mantegna))
                     
                     #if -> mostro solo se correlazione > theta
-                    G.add_edges_from([(list[i], list[j])], weight=correlation)
+                    #G.add_edges_from([(list[i], list[j])], weight=corr_mantegna)
+                    if (corr_mantegna > 0.75):
+                        corr_list.append((list[i], list[j], corr_mantegna))
                     
                 else:
                     print("adj_close_2 non ha dati sufficienti")
         else:
             print("adj_close_1 non ha dati sufficienti")
+        return_list[id] = corr_list
+    
             
     #print (multiprocessing.current_process().name," Worker")
     return
@@ -99,22 +103,31 @@ if __name__ == '__main__':
     sub_list = symbol_array[0:16]
     #print(sub_list)
     jobs = []
+    manager = multiprocessing.Manager()
+    corr_list = manager.dict()
     for i in range(5):
-        p = multiprocessing.Process(name=str(i),target=worker, args=[sub_list])
+        p = multiprocessing.Process(name=str(i),target=worker, args=(sub_list, corr_list))
         jobs.append(p)
         p.start()
+    
     #quando tutti i processi hanno finito mostro grafo
     for job in jobs:
         job.join()
     
     print("Tutto finito")
+    #print(corr_list)
     #G.add_edges_from([('C','F')], weight=0.214214)
+    for i in range(5):
+        for tupla in corr_list[i]:
+            G.add_edges_from([(tupla[0],tupla[1])], weight=tupla[2])
+    
+    
     options = {
         'node_color': 'red',
         'node_size': 1000,
         'width': 3,
-        'arrowstyle': '<->',
-        'arrowsize': 12,
+        'arrowstyle': '-',
+        'arrowsize': 0.2,
     }
     nx.draw_networkx(G, arrows=True, **options)
     pylab.show()
