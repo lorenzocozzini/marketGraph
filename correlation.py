@@ -6,10 +6,14 @@ import pymongo
 import numpy as np
 import utils
 from datetime import datetime 
+import networkx as nx
+import matplotlib.pyplot as plt
+import pylab
 
 from math import sqrt
 
 T = 10 #TODO leggi da args
+G = nx.DiGraph()
 
 def get_adj_close(ticker):
     myclient = pymongo.MongoClient("mongodb://160.78.28.56:27017/") #160.78.28.56
@@ -58,19 +62,31 @@ def worker(list):
         print("Ticker 1: " + list[i])
         adj_close_1 = get_adj_close(list[i])
         print("adj_close_1", adj_close_1)
-        for j in range(i+1, len(list)):
-            print("Ticker 2: " + list[j])
-            adj_close_2 = []
-            adj_close_2 = get_adj_close(list[j])
-            print("adj_close_2", adj_close_2)
-            #calcola correlazione
-            print("Correlation " + list[i] + " - " + list[j] + ":")
-            correlation = np.corrcoef(adj_close_1, adj_close_2)
-            print(correlation)
-            
-            corr_mantegna = get_correlation(adj_close_1, adj_close_2)
-            print("Correlation " + list[i] + " - " + list[j] + ":")
-            print(str(corr_mantegna))
+        if (len(adj_close_1) == T):                 #calcolo correlazione solo se ho i dati per tutto l'intervallo
+            G.add_node(list[i])
+            for j in range(i+1, len(list)):
+                print("Ticker 2: " + list[j])
+                adj_close_2 = []
+                adj_close_2 = get_adj_close(list[j])
+                print("adj_close_2", adj_close_2)
+                if (len(adj_close_2) == T):          #calcolo correlazione solo se ho i dati per tutto l'intervallo
+                    G.add_node(list[j])
+                    #calcola correlazione
+                    print("Correlation " + list[i] + " - " + list[j] + ":")
+                    correlation = np.corrcoef(adj_close_1, adj_close_2)
+                    print(correlation)
+                    
+                    corr_mantegna = get_correlation(adj_close_1, adj_close_2)
+                    print("Correlation " + list[i] + " - " + list[j] + ":")
+                    print(str(corr_mantegna))
+                    
+                    #if -> mostro solo se correlazione > theta
+                    G.add_edges_from([(list[i], list[j])], weight=correlation)
+                    
+                else:
+                    print("adj_close_2 non ha dati sufficienti")
+        else:
+            print("adj_close_1 non ha dati sufficienti")
             
     #print (multiprocessing.current_process().name," Worker")
     return
@@ -83,7 +99,22 @@ if __name__ == '__main__':
     sub_list = symbol_array[0:16]
     #print(sub_list)
     jobs = []
-    for i in range(1):
+    for i in range(5):
         p = multiprocessing.Process(name=str(i),target=worker, args=[sub_list])
         jobs.append(p)
         p.start()
+    #quando tutti i processi hanno finito mostro grafo
+    for job in jobs:
+        job.join()
+    
+    print("Tutto finito")
+    #G.add_edges_from([('C','F')], weight=0.214214)
+    options = {
+        'node_color': 'red',
+        'node_size': 1000,
+        'width': 3,
+        'arrowstyle': '<->',
+        'arrowsize': 12,
+    }
+    nx.draw_networkx(G, arrows=True, **options)
+    pylab.show()

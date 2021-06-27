@@ -20,7 +20,7 @@ def get_tickers(message, id_node, num_nodes):
         last_index = num_records*(id_node + 1)
     #se è l'ultimo
     else:
-         last_index =len_list
+         last_index = len_list
     sub_list = list_msg[id_node*num_records:last_index] 
     print("Downloading: ")
     print(sub_list)
