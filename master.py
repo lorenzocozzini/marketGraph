@@ -1,51 +1,127 @@
-#il master sa quanti nodi sono disponibile
-
-#legge lista tickers e la divide?   ---> matrice chiave valore (0: [...], 1: [...] ecc) -> nodo 0 assegno lista0 ecc
-#o la pubblica per intero e i nodi se la dividono?
-
+from numpy.lib import utils
 import paho.mqtt.client as mqtt
 import pandas as pd
 import json
+import sys
+import multiprocessing
+import networkx as nx
+import pylab
+from utils import get_adj_close, get_correlation, IP_BROKER
 
-df = pd.read_csv('us_market.csv')
-symbol_array = df["Symbol"].values
-print(symbol_array)
-print(len(symbol_array)) #7072
-
-message = json.dumps(symbol_array.tolist())
-print(message)
-
-client = mqtt.Client()
-client.connect('160.78.100.132', 9999)
-client.publish("Symbol", message)  #NB: prima devono partire i nodi, altrimenti non leggono il messaggio pubblica
-
-#dopo si iscrive a topic di tutti i nodi (o può essere anche lo stesso topic?)
 done_msg = 0
-n_nodes = 1 #TODO leggere da terminale
+
+def worker(list, return_list):
+    id = int(multiprocessing.current_process().name)
+    #print(list)
+    num_records = int(len(list)/5)
+    corr_list = []
+    #se non è l'ultimo 
+    if (id + 1 < 5):
+        last_index = num_records*(id+1)
+    #se è l'ultimo
+    else:
+         last_index = len(list)
+    #scarica i dati e calcola correlazioni
+    for i in range(num_records*id, last_index):
+        #print("Ticker 1: " + list[i])
+        adj_close_1 = get_adj_close(list[i])
+        #print("adj_close_1", adj_close_1)
+        if (len(adj_close_1) == T and not(None in adj_close_1)):                 #calcolo correlazione solo se ho i dati per tutto l'intervallo e non ci sono dati null
+            global G
+            for j in range(i+1, len(list)):
+                #print("Ticker 2: " + list[j])
+                adj_close_2 = []
+                adj_close_2 = get_adj_close(list[j])
+                #print("adj_close_2 " + list[j], adj_close_2)
+                if (len(adj_close_2) == T and not(None in adj_close_2)):          #calcolo correlazione solo se ho i dati per tutto l'intervallo e non ci sono dati null
+                    #calcola correlazione
+                    #print("Correlation " + list[i] + " - " + list[j] + ":")
+                    #correlation = np.corrcoef(adj_close_1, adj_close_2)
+                    #print(correlation)
+                    
+                    corr_mantegna = get_correlation(adj_close_1, adj_close_2)
+                    #print("Correlation " + list[i] + " - " + list[j] + ":")
+                    #print(str(corr_mantegna))
+                    
+                    #if -> mostro solo se correlazione > theta
+                    #G.add_edges_from([(list[i], list[j])], weight=corr_mantegna)
+                    if (corr_mantegna > 0.75):
+                        corr_list.append((list[i], list[j], round(corr_mantegna, 3)))
+                    
+                else:
+                    print(list[j] + " non ha dati sufficienti")
+        else:
+            print(list[i] + " non ha dati sufficienti")
+        return_list[id] = corr_list
+    return
 
 def on_connect(client, userdata, flags, rc):
-    print("Connected to a broker!")
-    client.subscribe("Node")
-    
+        print("Connected to a broker!")
+        client.subscribe("Node")
+        
 def on_message(client, userdata, message):
     msg = message.payload.decode()
-    print("MEssaggio: "+ msg)
+    print("Messaggio: "+ msg)
     global done_msg
-    if (msg == "DONE"):
+    if (msg == "DONE"):  #gestire lista aziende non trovate
         done_msg += 1 
         print(done_msg)
 
-while (done_msg < n_nodes):
-    client.on_connect = on_connect
-    client.on_message = on_message 
-    #print("DONE: "+ str(done_msg))
-    client.loop_start()    #https://stackoverflow.com/a/62950290
-    #in mezzo fare cose che vogliamo
-    client.loop_stop()
+def elab_dati(symbol_array):
+    G = nx.Graph()
+    jobs = []
+    manager = multiprocessing.Manager()
+    corr_list = manager.dict()
+    for i in range(5):
+        p = multiprocessing.Process(name=str(i),target=worker, args=(symbol_array, corr_list))
+        jobs.append(p)
+        p.start()
     
-print("Fine scambio msg")
+    #quando tutti i processi hanno finito mostro grafo
+    for job in jobs:
+        job.join()
+    
+    print("Fine processing correlation")
+    #disegno grafo
+    for i in range(5):
+        for tupla in corr_list[i]:
+            G.add_edges_from([(tupla[0],tupla[1])], weight=tupla[2])   #TODO: stampare anche su file 
+    
+    edge_labels=dict([((u,v,),d['weight'])
+                for u,v,d in G.edges(data=True)])
+    pos=nx.kamada_kawai_layout(G)
+    nx.draw_networkx_edge_labels(G,pos,edge_labels = edge_labels)
+    nx.draw(G,pos,with_labels = True, node_size=200, node_color = 'lightblue')
+    pylab.show()
 
-#TODO: elaborazione dati
+if __name__ == '__main__':
+    df = pd.read_csv('us_market.csv')
+    symbol_array = df["Symbol"].values
 
-#poi aspetta tot prima di ricominciare
+    message = json.dumps(symbol_array.tolist())
+
+    client = mqtt.Client()
+    client.connect(IP_BROKER, 9999)
+    client.publish("Symbol", message)  
+
+    n_nodes = int(sys.argv[1])    #py master.py 10 10
+    T = int(sys.argv[2]) 
+
+    while (done_msg < n_nodes):
+        client.on_connect = on_connect
+        client.on_message = on_message
+        client.loop_start()    #https://stackoverflow.com/a/62950290
+        #in mezzo fare cose che vogliamo
+        client.loop_stop()
+        
+    print("Fine scambio msg")
+    
+    ''' 
+    Elaborazione dati 
+    '''
+    #il master ha già lista completa symbol_array
+    #toglie lista di aziende che i nodi non hanno trovato TODO
+    elab_dati(symbol_array)
+    
+    
     
