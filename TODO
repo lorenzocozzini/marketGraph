@@ -1,34 +1,14 @@
-Decidere:
-    - Come si dividono le aziende:
-        - Le divide il master? Genera coppia chiave valore, dove chiave è id nodo a cui assegna aziende e valore è array aziende
-        - Se le dividono i nodi? Allora i nodi devono sapere quanti sono 
-    - Numero di nodi (chiedere?)
-    - data di partenza per scaricare
-
 Fare:
-    - Fix invio messaggio master -> array2string non va bene perchè lo salva come stringa esattamente come la stampa (['AACG', 'AACQ', "AACQU',...,'ZTS", 'ZUO', 'ZYME'])
     - Sistemare gestione dei messaggi del master (non prende int done, perchè?)
         - Capire quel on_message se si può fare sequenziale tipo bloccante
-    - Elaborazione dati da parte del master
-    - Nodi dovrebbero essere a posto (una volta deciso come dividere le aziende) 
-    - Indirizzi da passare da terminale (indirizzi broker, )
     - Gestire eventuali fail dei nodi
+    - Nodi tengono traccia delle aziende che non hanno dati/ problemi nel download e inviano lista al master, che li toglie dalla lista completa
+    - Aggiungere a MongoDB Collection per le aziende
+    - calcolo tempo totale per Elaborazione
+    - File delle correlazione assieme al grafo
 
-Chiedere:
-    - Giusto come utilizziamo MongoDB? Per ora una collection per ogni azienda, dove gli item sono le singole rige scaricate OK --> AGGIUNGERE DATI EDLLE AZIENDE SU UNA COLLECTION
-    - Per ora prove su piccole quantità di dati, come possiamo usare cluster? Non usiamo più localhost ma come si dovrebbe fare? boh boh OK
-    - Numero di nodi (decidere?) -> Che facciamo? un numero direi non troppo piccolo altrimenti facciamo troppe richieste da un singolo nodo e forse lo sovraccarichiamo? una roba come 12?
-    - Va bene se usiamo la libreria yahoo? lui ha detto di usare ciò che ci piace, ma meglio chiedere? ---> FARE NOI
-    - Intervallo adeguato? 10 min, 30 min?  ------> OGNI ORA
-    - Significato nan ----> FARE LIBRERIA NOI (possibile soluzione, tenere dati precedenti se c'è nan)
-    - Nodi oltre a scaricare devono fare qualcosa? Preelaborazioni?
-        -------> per calcolo correlazioni fa tutto master , livello multi process (no thread in python!)
-                - o nodi iniziano a calcolare le loro correlazioni
-
-
-
-    - NB ricorda di far chiudere porte al pc per MongoDB alla fine!
-        netsh advfirewall reset
+- NB ricorda di far chiudere porte al pc per MongoDB alla fine!
+    netsh advfirewall reset
     
 
 

@@ -5,6 +5,10 @@ import pandas as pd
 import pymongo
 import json
 import requests
+from math import sqrt
+
+IP_BROKER = '160.78.100.132'
+IP_MONGO_DB = '160.78.28.56'
 
 def download_finance(ticker, interval, period1, period2 = datetime.now()):
     period1 = int(time.mktime(period1.timetuple()))
@@ -41,7 +45,7 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
         timestamp.append(datetimeData)
 
 
-    myclient = pymongo.MongoClient("mongodb://160.78.28.56:27017/")  #160.78.28.56
+    myclient = pymongo.MongoClient("mongodb://{}:27017/".format(IP_MONGO_DB))  #160.78.28.56
     mydb = myclient["MarketDB"]
     mycol = mydb[ticker]
 
@@ -55,3 +59,43 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
                 "Volume": volume[i]
                 }
         mycol.insert_one(object)
+
+def get_adj_close(ticker, T):
+    myclient = pymongo.MongoClient("mongodb://{}:27017/".format(IP_MONGO_DB)) #160.78.28.56
+    mydb = myclient["MarketDB"]
+    mycol = mydb[ticker]
+    cursor = mycol.find(
+    sort = [( '_id', pymongo.DESCENDING )], 
+    limit= T #numero di giorni che vogliamo
+    )
+    last_doc = list(cursor)
+    #print(last_doc)
+    adj_close = []
+    for j in last_doc:
+        adj_close.append(j["AdjClose"])
+    return adj_close
+
+def get_correlation(adj_close_1, adj_close_2, T):
+    #arg1
+    product = [x*y for x,y in zip(adj_close_1,adj_close_2)]
+    arg1 = sum(product)/T
+    
+    #arg2
+    r1_brack = sum(adj_close_1)/T
+    r2_brack = sum(adj_close_2)/T
+    arg2 = r1_brack * r2_brack
+    
+    r1_quad = [x*y for x,y in zip(adj_close_1,adj_close_1)]
+    r2_quad = [x*y for x,y in zip(adj_close_2,adj_close_2)]
+    
+    r1_quad_sottr = [x - (r1_brack*r1_brack) for x in r1_quad]
+    r2_quad_sottr = [x - (r2_brack*r2_brack) for x in r2_quad]
+    
+    arg3 = sum(r1_quad_sottr)/T
+    arg4 = sum(r2_quad_sottr)/T
+    
+    if (sqrt(arg3*arg4) != 0):
+        corr_mantegna = (arg1 -arg2)/sqrt(arg3*arg4)
+    else:
+        corr_mantegna = 0 #indefinita
+    return corr_mantegna

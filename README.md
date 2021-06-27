@@ -6,13 +6,13 @@ pip install pandas
 pip install paho-mqtt
 pip install amqtt
 pip install hbmqtt
-pip install ujson
 pip install networkx
+pip install progressbar
 ```
 
 Start broker
 ```
-py broker.py
+py broker.py 
 ```
 Start node(s)
 ```
@@ -20,5 +20,5 @@ py node.py [id] [numberOfNodes]
 ```
 Start master
 ```
-py master.py
+py master.py [numberOfNodes] [T]
 ```
