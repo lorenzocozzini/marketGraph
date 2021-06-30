@@ -15,6 +15,18 @@ from math import sqrt
 T = 10 #TODO leggi da args
 G = nx.Graph()
 
+#definisco fuori???
+corr01 = []
+corr12 = []
+corr23 = []
+corr34 = []
+corr45 = []
+corr56 = []
+corr67 = []
+corr78 = []
+corr89 = []
+corr91 = []
+
 def get_adj_close(ticker):
     myclient = pymongo.MongoClient("mongodb://160.78.28.56:27017/") #160.78.28.56
     mydb = myclient["MarketDB"]
@@ -90,8 +102,40 @@ def worker(list, return_list):
                     
                     #if -> mostro solo se correlazione > theta
                     #G.add_edges_from([(list[i], list[j])], weight=corr_mantegna)
+                    ###########################30 06 2021 ##############################
+                    #per fare la Gaussiana qui farei tante liste per ogni range di valori e andrei a mettere quei valori nelle liste:
+                    #non ci servono i nomi delle aziende perchè dobbiamo solo trovare il valore di theta
+
+                    #metto nelle varie liste a seconda del valore di corr: sicuro si può fare migliore
+                    if(corr_mantegna > 0.0 & corr_mantegna <= 0.1):
+                        corr01.append(corr_mantegna)
+                    if(corr_mantegna > 0.1 & corr_mantegna <= 0.2):
+                        corr12.append(corr_mantegna)
+                    if(corr_mantegna > 0.2 & corr_mantegna <= 0.3):
+                        corr23.append(corr_mantegna)
+                    if(corr_mantegna > 0.3 & corr_mantegna <= 0.4):
+                        corr34.append(corr_mantegna)
+                    if(corr_mantegna > 0.4 & corr_mantegna <= 0.5):
+                        corr45.append(corr_mantegna)
+                    if(corr_mantegna > 0.5 & corr_mantegna <= 0.6):
+                        corr56.append(corr_mantegna)
+                    if(corr_mantegna > 0.6 & corr_mantegna <= 0.7):
+                        corr67.append(corr_mantegna)
+                    if(corr_mantegna > 0.7 & corr_mantegna <= 0.8):
+                        corr78.append(corr_mantegna)
+                    if(corr_mantegna > 0.8 & corr_mantegna <= 0.9):
+                        corr89.append(corr_mantegna)
+                    if(corr_mantegna > 0.9 & corr_mantegna <= 1.0):
+                        corr89.append(corr_mantegna)
+
+                    #istogramma 
+
+
+
                     if (corr_mantegna > 0.75):
                         corr_list.append((list[i], list[j], round(corr_mantegna, 3)))
+                       
+
                     
                 else:
                     print(list[j] + " non ha dati sufficienti")
