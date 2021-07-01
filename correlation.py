@@ -1,5 +1,6 @@
 #calcolo correlazione
 import multiprocessing
+from typing import Sequence
 import pandas as pd
 import json
 import pymongo
@@ -180,13 +181,21 @@ if __name__ == '__main__':
     #ora faccio istogramma
     indices = np.arange(len(corrHist[0]))
     word = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    mu, std = norm.fit(word) 
     frequency = [corrHist[0][0], corrHist[0][1],corrHist[0][2], corrHist[0][3], corrHist[0][4], corrHist[0][5], corrHist[0][6], corrHist[0][7], corrHist[0][8], corrHist[0][9]]
+    mu, std = norm.fit(frequency) 
     plt.bar(indices, frequency, color='r')
     plt.xticks(indices, word, rotation='vertical')
     plt.tight_layout()
+    #plt.show()
+    #?????non va bene la mu ma non so perchè
+    #plt.hist(frequency, bins=25, density=True, alpha=0.4, color='g') #alpha è trasparenza
+    xmin, xmax = plt.xlim()
+    x = np.linspace(xmin, xmax, 100)
+    p = norm.pdf(x, mu, std)
+    plt.plot(x, p, 'k', linewidth=2)
+    title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
+    plt.title(title)
     plt.show()
-
     #Creo il file
     import csv
     with open('correlation.gdf', mode='w', newline='') as csv_file:
@@ -197,12 +206,12 @@ if __name__ == '__main__':
     #disegno grafo e scrivo su CSV
         for i in range(5):
             for tupla in corr_list[i]:
-                G.add_edges_from([(tupla[0],tupla[1])], weight=tupla[2])
+                #G.add_edges_from([(tupla[0],tupla[1])], weight=tupla[2])
                 writer.writerow({'edgedef>node1 VARCHAR': tupla[0], 'node2 VARCHAR': tupla[1], 'weight DOUBLE': tupla[2]})
     
     edge_labels=dict([((u,v,),d['weight'])
                 for u,v,d in G.edges(data=True)])
-    pos=nx.kamada_kawai_layout(G)
-    nx.draw_networkx_edge_labels(G,pos,edge_labels = edge_labels)
-    nx.draw(G,pos,with_labels = True, node_size=200, node_color = 'lightblue')
-    pylab.show()
+    #pos=nx.kamada_kawai_layout(G)
+    #nx.draw_networkx_edge_labels(G,pos,edge_labels = edge_labels)
+    #nx.draw(G,pos,with_labels = True, node_size=200, node_color = 'lightblue')
+    #pylab.show()
