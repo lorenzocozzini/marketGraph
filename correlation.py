@@ -9,6 +9,8 @@ from datetime import datetime
 import networkx as nx
 import matplotlib.pyplot as plt
 import pylab
+import matplotlib.mlab as mlab
+from scipy.stats import norm
 
 from math import sqrt
 
@@ -67,11 +69,12 @@ def get_correlation(adj_close_1, adj_close_2):
         corr_mantegna = 0 #indefinita
     return corr_mantegna
 
-def worker(list, return_list):
+def worker(list, return_list,corrHist):
     id = int(multiprocessing.current_process().name)
     #print(list)
     num_records = int(len(list)/5)
     corr_list = []
+    corrHistPass = []
     #se non è l'ultimo 
     if (id + 1 < 5):
         last_index = num_records*(id+1)
@@ -128,20 +131,23 @@ def worker(list, return_list):
                     if(corr_mantegna > 0.9 and corr_mantegna <= 1.0):
                         corr89.append(corr_mantegna)
 
-                    #istogramma 
-
-
-
                     if (corr_mantegna > 0.75):
-                        corr_list.append((list[i], list[j], round(corr_mantegna, 3)))
-                       
-
-                    
+                        corr_list.append((list[i], list[j], round(corr_mantegna, 3))) 
                 else:
                     print(list[j] + " non ha dati sufficienti")
         else:
             print(list[i] + " non ha dati sufficienti")
+
+        
+        #metto tutte le correlazioni nelle varie liste e faccio istogramma
+        #plt.bar(corr89, corr89.count)
+        #plt.show()
+        #calcolo poi la gaussiana e poi la deviazione std: sarà la mia theta quindi dobbiamo cambiare dove mettiamo cose in corr list
         return_list[id] = corr_list
+
+        #passo lista correlazioni per istogramma
+        corrHistPass = (len(corr01),len(corr12),len(corr23),len(corr34),len(corr45),len(corr56),len(corr67),len(corr78),len(corr89),len(corr91))
+        corrHist[0] = corrHistPass
     return
 
 if __name__ == '__main__':
@@ -157,9 +163,10 @@ if __name__ == '__main__':
     jobs = []
     manager = multiprocessing.Manager()
     corr_list = manager.dict()
+    corrHist = manager.dict()
     for i in range(5):
         #p = multiprocessing.Process(name=str(i),target=worker, args=(symbol_array, corr_list))
-        p = multiprocessing.Process(name=str(i),target=worker, args=(sub_list, corr_list))
+        p = multiprocessing.Process(name=str(i),target=worker, args=(sub_list, corr_list, corrHist))
         jobs.append(p)
         p.start()
     
@@ -168,6 +175,17 @@ if __name__ == '__main__':
         job.join()
     
     print("Fine processing correlation")
+
+    #Ho calcolato tutte le correlazioni: e ho come risultato il dict del numero di correlazioni per ogni range di valori
+    #ora faccio istogramma
+    indices = np.arange(len(corrHist[0]))
+    word = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    mu, std = norm.fit(word) 
+    frequency = [corrHist[0][0], corrHist[0][1],corrHist[0][2], corrHist[0][3], corrHist[0][4], corrHist[0][5], corrHist[0][6], corrHist[0][7], corrHist[0][8], corrHist[0][9]]
+    plt.bar(indices, frequency, color='r')
+    plt.xticks(indices, word, rotation='vertical')
+    plt.tight_layout()
+    plt.show()
 
     #Creo il file
     import csv
