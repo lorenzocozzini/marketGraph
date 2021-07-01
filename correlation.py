@@ -107,25 +107,25 @@ def worker(list, return_list):
                     #non ci servono i nomi delle aziende perchè dobbiamo solo trovare il valore di theta
 
                     #metto nelle varie liste a seconda del valore di corr: sicuro si può fare migliore
-                    if(corr_mantegna > 0.0 & corr_mantegna <= 0.1):
+                    if(corr_mantegna > 0.0 and corr_mantegna <= 0.1):
                         corr01.append(corr_mantegna)
-                    if(corr_mantegna > 0.1 & corr_mantegna <= 0.2):
+                    if(corr_mantegna > 0.1 and corr_mantegna <= 0.2):
                         corr12.append(corr_mantegna)
-                    if(corr_mantegna > 0.2 & corr_mantegna <= 0.3):
+                    if(corr_mantegna > 0.2 and corr_mantegna <= 0.3):
                         corr23.append(corr_mantegna)
-                    if(corr_mantegna > 0.3 & corr_mantegna <= 0.4):
+                    if(corr_mantegna > 0.3 and corr_mantegna <= 0.4):
                         corr34.append(corr_mantegna)
-                    if(corr_mantegna > 0.4 & corr_mantegna <= 0.5):
+                    if(corr_mantegna > 0.4 and corr_mantegna <= 0.5):
                         corr45.append(corr_mantegna)
-                    if(corr_mantegna > 0.5 & corr_mantegna <= 0.6):
+                    if(corr_mantegna > 0.5 and corr_mantegna <= 0.6):
                         corr56.append(corr_mantegna)
-                    if(corr_mantegna > 0.6 & corr_mantegna <= 0.7):
+                    if(corr_mantegna > 0.6 and corr_mantegna <= 0.7):
                         corr67.append(corr_mantegna)
-                    if(corr_mantegna > 0.7 & corr_mantegna <= 0.8):
+                    if(corr_mantegna > 0.7 and corr_mantegna <= 0.8):
                         corr78.append(corr_mantegna)
-                    if(corr_mantegna > 0.8 & corr_mantegna <= 0.9):
+                    if(corr_mantegna > 0.8 and corr_mantegna <= 0.9):
                         corr89.append(corr_mantegna)
-                    if(corr_mantegna > 0.9 & corr_mantegna <= 1.0):
+                    if(corr_mantegna > 0.9 and corr_mantegna <= 1.0):
                         corr89.append(corr_mantegna)
 
                     #istogramma 
@@ -153,12 +153,13 @@ if __name__ == '__main__':
     
     
     adj_close = []
-    #sub_list = symbol_array[0:16]
+    sub_list = symbol_array[0:16]
     jobs = []
     manager = multiprocessing.Manager()
     corr_list = manager.dict()
     for i in range(5):
-        p = multiprocessing.Process(name=str(i),target=worker, args=(symbol_array, corr_list))
+        #p = multiprocessing.Process(name=str(i),target=worker, args=(symbol_array, corr_list))
+        p = multiprocessing.Process(name=str(i),target=worker, args=(sub_list, corr_list))
         jobs.append(p)
         p.start()
     
@@ -167,10 +168,19 @@ if __name__ == '__main__':
         job.join()
     
     print("Fine processing correlation")
-    #disegno grafo
-    for i in range(5):
-        for tupla in corr_list[i]:
-            G.add_edges_from([(tupla[0],tupla[1])], weight=tupla[2])
+
+    #Creo il file
+    import csv
+    with open('correlation.gdf', mode='w', newline='') as csv_file:
+        colonne = ['edgedef>node1 VARCHAR', 'node2 VARCHAR', 'weight DOUBLE']
+        writer = csv.DictWriter(csv_file, fieldnames=colonne)
+        writer.writeheader()
+        
+    #disegno grafo e scrivo su CSV
+        for i in range(5):
+            for tupla in corr_list[i]:
+                G.add_edges_from([(tupla[0],tupla[1])], weight=tupla[2])
+                writer.writerow({'edgedef>node1 VARCHAR': tupla[0], 'node2 VARCHAR': tupla[1], 'weight DOUBLE': tupla[2]})
     
     edge_labels=dict([((u,v,),d['weight'])
                 for u,v,d in G.edges(data=True)])
