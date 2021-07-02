@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 import pylab
 import matplotlib.mlab as mlab
 from scipy.stats import norm
-
+from time import sleep
+import progressbar
 from math import sqrt
 
 T = 10 #TODO leggi da args
@@ -72,6 +73,8 @@ def get_correlation(adj_close_1, adj_close_2):
 
 def worker(list, return_list,corrHist):
     id = int(multiprocessing.current_process().name)
+    bar = progressbar.ProgressBar(maxval=20, \
+        widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
     #print(list)
     num_records = int(len(list)/5)
     corr_list = []
@@ -83,6 +86,8 @@ def worker(list, return_list,corrHist):
     else:
          last_index = len(list)
     #scarica i dati e calcola correlazioni
+
+    bar.start()
     for i in range(num_records*id, last_index):
         #print("Ticker 1: " + list[i])
         adj_close_1 = get_adj_close(list[i])
@@ -132,6 +137,9 @@ def worker(list, return_list,corrHist):
                     if(corr_mantegna > 0.9 and corr_mantegna <= 1.0):
                         corr89.append(corr_mantegna)
 
+                    bar.update(j+1) #sistemareeee
+                    sleep(0.2)
+
                     if (corr_mantegna > 0.75):
                         corr_list.append((list[i], list[j], round(corr_mantegna, 3))) 
                 else:
@@ -149,6 +157,8 @@ def worker(list, return_list,corrHist):
         #passo lista correlazioni per istogramma
         corrHistPass = (len(corr01),len(corr12),len(corr23),len(corr34),len(corr45),len(corr56),len(corr67),len(corr78),len(corr89),len(corr91))
         corrHist[0] = corrHistPass
+        bar.finish()
+    
     return
 
 if __name__ == '__main__':
@@ -157,20 +167,18 @@ if __name__ == '__main__':
     
     #il master ha già lista completa
     #toglie lista di aziende che i nodi non hanno trovato
-    
-    
     adj_close = []
     sub_list = symbol_array[0:16]
     jobs = []
     manager = multiprocessing.Manager()
     corr_list = manager.dict()
     corrHist = manager.dict()
+   
     for i in range(5):
         #p = multiprocessing.Process(name=str(i),target=worker, args=(symbol_array, corr_list))
         p = multiprocessing.Process(name=str(i),target=worker, args=(sub_list, corr_list, corrHist))
         jobs.append(p)
         p.start()
-    
     #quando tutti i processi hanno finito mostro grafo
     for job in jobs:
         job.join()
