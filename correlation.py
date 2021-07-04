@@ -81,15 +81,26 @@ def get_hist(corr_list):
     title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
     plt.title(title)
     plt.show()
-    
+
+    r1 = np.mean(correlation_value)
+    print("\nMean: ", r1)
+    r2 = np.std(correlation_value)
+    print("\nstd: ", r2)
+    r3 = np.var(correlation_value)
+    print("\nvariance: ", r3)
+
+    return std
+
+def get_edges(theta, corr_list):
+    edges_list=[]
+    for i in range(len(corr_list)):
+        for tupla in corr_list[i]:
+            if (tupla[2]>=theta):
+                edges_list.append(tupla)
+    return edges_list
+
 
     
-    
-
-
-
-
-
 def get_adj_close(ticker):
     myclient = pymongo.MongoClient("mongodb://160.78.28.56:27017/") #160.78.28.56
     mydb = myclient["MarketDB"]
@@ -184,18 +195,8 @@ def worker(list, return_list):
                     print(list[j] + " non ha dati sufficienti")
         else:
             print(list[i] + " non ha dati sufficienti")
-
-        
-        #metto tutte le correlazioni nelle varie liste e faccio istogramma
-        #plt.bar(corr89, corr89.count)
-        #plt.show()
-        #calcolo poi la gaussiana e poi la deviazione std: sarà la mia theta quindi dobbiamo cambiare dove mettiamo cose in corr list
         return_list[id] = corr_list
 
-        #passo lista correlazioni per istogramma
-       # corrHistPass = (len(corr01),len(corr12),len(corr23),len(corr34),len(corr45),len(corr56),len(corr67),len(corr78),len(corr89),len(corr91))
-        #corrHist[0] = corrHistPass
-        #print(corrHist)
         #bar.finish()
     
     return
@@ -224,30 +225,9 @@ if __name__ == '__main__':
     
     print("Fine processing correlation")
 
-    get_hist(corr_list)
+    theta = get_hist(corr_list)
 
-    #Ho calcolato tutte le correlazioni: e ho come risultato il dict del numero di correlazioni per ogni range di valori
-    #ora faccio istogramma
-    #indices = np.arange(len(corrHist[0]))
-    #word = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    #frequency = [corrHist[0][0], corrHist[0][1],corrHist[0][2], corrHist[0][3], corrHist[0][4], corrHist[0][5], corrHist[0][6], corrHist[0][7], corrHist[0][8], corrHist[0][9]]
-    #for in 
-    #mu, std = norm.fit(frequency) 
-    #plt.bar(indices, frequency, color='r')
-    #plt.xticks(indices, word, rotation='vertical')
-    #plt.tight_layout()
-    #plt.show()
-    #?????non va bene la mu ma non so perchè
-    #
-    #plt.hist(frequency, bins=25, density=True, alpha=0.4, color='g') #alpha è trasparenza
-    #plt.show()
-    #xmin, xmax = plt.xlim()
-    #x = np.linspace(xmin, xmax, 100)
-    #p = norm.pdf(x, mu, std)
-    #plt.plot(x, p, 'k', linewidth=2)
-    #title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
-    #plt.title(title)
-    #plt.show()
+    edges_list= get_edges(theta, corr_list)
 
 
     #Creo il file
@@ -258,14 +238,14 @@ if __name__ == '__main__':
         writer.writeheader()
         
     #disegno grafo e scrivo su CSV
-        for i in range(5):
-            for tupla in corr_list[i]:
-                #G.add_edges_from([(tupla[0],tupla[1])], weight=tupla[2])
-                writer.writerow({'Source': tupla[0], 'Target': tupla[1], 'Weight': tupla[2]})
+        #for i in range(5):
+        for tupla in edges_list:
+            G.add_edges_from([(tupla[0],tupla[1])], weight=tupla[2])
+            writer.writerow({'Source': tupla[0], 'Target': tupla[1], 'Weight': tupla[2]})
     
     edge_labels=dict([((u,v,),d['weight'])
                 for u,v,d in G.edges(data=True)])
-    #pos=nx.kamada_kawai_layout(G)
-    #nx.draw_networkx_edge_labels(G,pos,edge_labels = edge_labels)
-    #nx.draw(G,pos,with_labels = True, node_size=200, node_color = 'lightblue')
-    #pylab.show()
+    pos=nx.kamada_kawai_layout(G)
+    nx.draw_networkx_edge_labels(G,pos,edge_labels = edge_labels)
+    nx.draw(G,pos,with_labels = True, node_size=200, node_color = 'lightblue')
+    pylab.show()
