@@ -118,23 +118,23 @@ def worker(list, return_list,corrHist):
                     #metto nelle varie liste a seconda del valore di corr: sicuro si può fare migliore
                     if(corr_mantegna > 0.0 and corr_mantegna <= 0.1):
                         corr01.append(corr_mantegna)
-                    if(corr_mantegna > 0.1 and corr_mantegna <= 0.2):
+                    elif(corr_mantegna > 0.1 and corr_mantegna <= 0.2):
                         corr12.append(corr_mantegna)
-                    if(corr_mantegna > 0.2 and corr_mantegna <= 0.3):
+                    elif(corr_mantegna > 0.2 and corr_mantegna <= 0.3):
                         corr23.append(corr_mantegna)
-                    if(corr_mantegna > 0.3 and corr_mantegna <= 0.4):
+                    elif(corr_mantegna > 0.3 and corr_mantegna <= 0.4):
                         corr34.append(corr_mantegna)
-                    if(corr_mantegna > 0.4 and corr_mantegna <= 0.5):
+                    elif(corr_mantegna > 0.4 and corr_mantegna <= 0.5):
                         corr45.append(corr_mantegna)
-                    if(corr_mantegna > 0.5 and corr_mantegna <= 0.6):
+                    elif(corr_mantegna > 0.5 and corr_mantegna <= 0.6):
                         corr56.append(corr_mantegna)
-                    if(corr_mantegna > 0.6 and corr_mantegna <= 0.7):
+                    elif(corr_mantegna > 0.6 and corr_mantegna <= 0.7):
                         corr67.append(corr_mantegna)
-                    if(corr_mantegna > 0.7 and corr_mantegna <= 0.8):
+                    elif(corr_mantegna > 0.7 and corr_mantegna <= 0.8):
                         corr78.append(corr_mantegna)
-                    if(corr_mantegna > 0.8 and corr_mantegna <= 0.9):
+                    elif(corr_mantegna > 0.8 and corr_mantegna <= 0.9):
                         corr89.append(corr_mantegna)
-                    if(corr_mantegna > 0.9 and corr_mantegna <= 1.0):
+                    elif(corr_mantegna > 0.9 and corr_mantegna <= 1.0):
                         corr89.append(corr_mantegna)
 
                     bar.update(j+1) #sistemareeee
@@ -204,10 +204,12 @@ if __name__ == '__main__':
     title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
     plt.title(title)
     plt.show()
+
+
     #Creo il file
     import csv
-    with open('correlation.gdf', mode='w', newline='') as csv_file:
-        colonne = ['edgedef>node1 VARCHAR', 'node2 VARCHAR', 'weight DOUBLE']
+    with open('correlation.csv', mode='w', newline='') as csv_file:
+        colonne = ['Source', 'Target', 'Weight']
         writer = csv.DictWriter(csv_file, fieldnames=colonne)
         writer.writeheader()
         
@@ -215,7 +217,7 @@ if __name__ == '__main__':
         for i in range(5):
             for tupla in corr_list[i]:
                 #G.add_edges_from([(tupla[0],tupla[1])], weight=tupla[2])
-                writer.writerow({'edgedef>node1 VARCHAR': tupla[0], 'node2 VARCHAR': tupla[1], 'weight DOUBLE': tupla[2]})
+                writer.writerow({'Source': tupla[0], 'Target': tupla[1], 'Weight': tupla[2]})
     
     edge_labels=dict([((u,v,),d['weight'])
                 for u,v,d in G.edges(data=True)])

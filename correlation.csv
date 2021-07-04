@@ -1,4 +1,4 @@
-edgedef>node1 VARCHAR,node2 VARCHAR,weight DOUBLE
+Source,Target,Weight
 AACG,AAL,0.798
 AACG,AAME,0.837
 AACG,ABIO,0.827
