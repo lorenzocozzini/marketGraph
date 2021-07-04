@@ -15,21 +15,80 @@ from scipy.stats import norm
 from time import sleep
 import progressbar
 from math import sqrt
+import scipy.stats as st
 
 T = 10 #TODO leggi da args
 G = nx.Graph()
 
-#definisco fuori???
-corr01 = []
-corr12 = []
-corr23 = []
-corr34 = []
-corr45 = []
-corr56 = []
-corr67 = []
-corr78 = []
-corr89 = []
-corr91 = []
+def get_hist(corr_list):
+    
+    correlation_count = [0] * 10
+
+     #metto nelle varie liste a seconda del valore di corr: sicuro si può fare migliore
+
+    #print(corr_list)
+    correlation_value = []
+    
+    for i in range(len(corr_list)):
+        for tupla in corr_list[i]:
+            correlation_value.append(tupla[2])
+            if(tupla[2] > 0.0 and tupla[2] <= 0.1):
+                correlation_count[0]+=1
+            elif(tupla[2] > 0.1 and tupla[2] <= 0.2):
+                correlation_count[1]+=1
+            elif(tupla[2] > 0.2 and tupla[2] <= 0.3):
+                correlation_count[2]+=1
+            elif(tupla[2] > 0.3 and tupla[2] <= 0.4):
+                correlation_count[3]+=1
+            elif(tupla[2] > 0.4 and tupla[2] <= 0.5):
+                correlation_count[4]+=1
+            elif(tupla[2] > 0.5 and tupla[2] <= 0.6):
+                correlation_count[5]+=1
+            elif(tupla[2] > 0.6 and tupla[2] <= 0.7):
+                correlation_count[6]+=1
+                #print(tupla)
+            elif(tupla[2] > 0.7 and tupla[2] <= 0.8):
+                correlation_count[7]+=1
+            elif(tupla[2] > 0.8 and tupla[2] <= 0.9):
+                correlation_count[8]+=1
+            elif(tupla[2] > 0.9 and tupla[2] <= 1.0):
+                correlation_count[9]+=1
+                #print(tupla)
+    
+    
+    print(correlation_count)
+    print(correlation_value)
+    
+    #disegno istogramma
+    indices = np.arange(len(correlation_count))
+    word = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    plt.bar(indices, correlation_count, color='r')
+    plt.xticks(indices, word, rotation='vertical')
+    plt.tight_layout()
+    plt.show()
+
+    #calcolo Gaussiana
+    mu, std = norm.fit(correlation_value) 
+    plt.hist(correlation_value, density=True, bins=200, label="Data")
+    mn, mx = plt.xlim()
+    plt.xlim(mn, mx)
+    kde_xs = np.linspace(mn, mx, 300)
+    kde = st.gaussian_kde(correlation_value)
+    plt.plot(kde_xs, kde.pdf(kde_xs), label="PDF")
+    plt.legend(loc="upper left")
+    plt.ylabel('Probability')
+    plt.xlabel('Data')
+    title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
+    plt.title(title)
+    plt.show()
+    
+
+    
+    
+
+
+
+
 
 def get_adj_close(ticker):
     myclient = pymongo.MongoClient("mongodb://160.78.28.56:27017/") #160.78.28.56
@@ -71,7 +130,7 @@ def get_correlation(adj_close_1, adj_close_2):
         corr_mantegna = 0 #indefinita
     return corr_mantegna
 
-def worker(list, return_list,corrHist):
+def worker(list, return_list):
     id = int(multiprocessing.current_process().name)
     bar = progressbar.ProgressBar(maxval=20, \
         widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
@@ -87,7 +146,7 @@ def worker(list, return_list,corrHist):
          last_index = len(list)
     #scarica i dati e calcola correlazioni
 
-    bar.start()
+    #bar.start()
     for i in range(num_records*id, last_index):
         #print("Ticker 1: " + list[i])
         adj_close_1 = get_adj_close(list[i])
@@ -115,33 +174,12 @@ def worker(list, return_list,corrHist):
                     #per fare la Gaussiana qui farei tante liste per ogni range di valori e andrei a mettere quei valori nelle liste:
                     #non ci servono i nomi delle aziende perchè dobbiamo solo trovare il valore di theta
 
-                    #metto nelle varie liste a seconda del valore di corr: sicuro si può fare migliore
-                    if(corr_mantegna > 0.0 and corr_mantegna <= 0.1):
-                        corr01.append(corr_mantegna)
-                    elif(corr_mantegna > 0.1 and corr_mantegna <= 0.2):
-                        corr12.append(corr_mantegna)
-                    elif(corr_mantegna > 0.2 and corr_mantegna <= 0.3):
-                        corr23.append(corr_mantegna)
-                    elif(corr_mantegna > 0.3 and corr_mantegna <= 0.4):
-                        corr34.append(corr_mantegna)
-                    elif(corr_mantegna > 0.4 and corr_mantegna <= 0.5):
-                        corr45.append(corr_mantegna)
-                    elif(corr_mantegna > 0.5 and corr_mantegna <= 0.6):
-                        corr56.append(corr_mantegna)
-                    elif(corr_mantegna > 0.6 and corr_mantegna <= 0.7):
-                        corr67.append(corr_mantegna)
-                    elif(corr_mantegna > 0.7 and corr_mantegna <= 0.8):
-                        corr78.append(corr_mantegna)
-                    elif(corr_mantegna > 0.8 and corr_mantegna <= 0.9):
-                        corr89.append(corr_mantegna)
-                    elif(corr_mantegna > 0.9 and corr_mantegna <= 1.0):
-                        corr89.append(corr_mantegna)
+                    #bar.update(j+1) #sistemareeee
+                    #sleep(0.2)
 
-                    bar.update(j+1) #sistemareeee
-                    sleep(0.2)
-
-                    if (corr_mantegna > 0.75):
-                        corr_list.append((list[i], list[j], round(corr_mantegna, 3))) 
+                    #Va fuori
+                    #if (corr_mantegna > 0.75):
+                    corr_list.append((list[i], list[j], round(corr_mantegna, 3))) 
                 else:
                     print(list[j] + " non ha dati sufficienti")
         else:
@@ -155,9 +193,10 @@ def worker(list, return_list,corrHist):
         return_list[id] = corr_list
 
         #passo lista correlazioni per istogramma
-        corrHistPass = (len(corr01),len(corr12),len(corr23),len(corr34),len(corr45),len(corr56),len(corr67),len(corr78),len(corr89),len(corr91))
-        corrHist[0] = corrHistPass
-        bar.finish()
+       # corrHistPass = (len(corr01),len(corr12),len(corr23),len(corr34),len(corr45),len(corr56),len(corr67),len(corr78),len(corr89),len(corr91))
+        #corrHist[0] = corrHistPass
+        #print(corrHist)
+        #bar.finish()
     
     return
 
@@ -172,11 +211,11 @@ if __name__ == '__main__':
     jobs = []
     manager = multiprocessing.Manager()
     corr_list = manager.dict()
-    corrHist = manager.dict()
+    #corrHist = manager.dict()
    
     for i in range(5):
         #p = multiprocessing.Process(name=str(i),target=worker, args=(symbol_array, corr_list))
-        p = multiprocessing.Process(name=str(i),target=worker, args=(sub_list, corr_list, corrHist))
+        p = multiprocessing.Process(name=str(i),target=worker, args=(sub_list, corr_list))
         jobs.append(p)
         p.start()
     #quando tutti i processi hanno finito mostro grafo
@@ -185,25 +224,30 @@ if __name__ == '__main__':
     
     print("Fine processing correlation")
 
+    get_hist(corr_list)
+
     #Ho calcolato tutte le correlazioni: e ho come risultato il dict del numero di correlazioni per ogni range di valori
     #ora faccio istogramma
-    indices = np.arange(len(corrHist[0]))
-    word = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    frequency = [corrHist[0][0], corrHist[0][1],corrHist[0][2], corrHist[0][3], corrHist[0][4], corrHist[0][5], corrHist[0][6], corrHist[0][7], corrHist[0][8], corrHist[0][9]]
-    mu, std = norm.fit(frequency) 
-    plt.bar(indices, frequency, color='r')
-    plt.xticks(indices, word, rotation='vertical')
-    plt.tight_layout()
+    #indices = np.arange(len(corrHist[0]))
+    #word = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    #frequency = [corrHist[0][0], corrHist[0][1],corrHist[0][2], corrHist[0][3], corrHist[0][4], corrHist[0][5], corrHist[0][6], corrHist[0][7], corrHist[0][8], corrHist[0][9]]
+    #for in 
+    #mu, std = norm.fit(frequency) 
+    #plt.bar(indices, frequency, color='r')
+    #plt.xticks(indices, word, rotation='vertical')
+    #plt.tight_layout()
     #plt.show()
     #?????non va bene la mu ma non so perchè
+    #
     #plt.hist(frequency, bins=25, density=True, alpha=0.4, color='g') #alpha è trasparenza
-    xmin, xmax = plt.xlim()
-    x = np.linspace(xmin, xmax, 100)
-    p = norm.pdf(x, mu, std)
-    plt.plot(x, p, 'k', linewidth=2)
-    title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
-    plt.title(title)
-    plt.show()
+    #plt.show()
+    #xmin, xmax = plt.xlim()
+    #x = np.linspace(xmin, xmax, 100)
+    #p = norm.pdf(x, mu, std)
+    #plt.plot(x, p, 'k', linewidth=2)
+    #title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
+    #plt.title(title)
+    #plt.show()
 
 
     #Creo il file
