@@ -98,8 +98,6 @@ def get_edges(theta, corr_list):
             if (tupla[2]>=theta):
                 edges_list.append(tupla)
     return edges_list
-
-
     
 def get_adj_close(ticker):
     myclient = pymongo.MongoClient("mongodb://160.78.28.56:27017/") #160.78.28.56

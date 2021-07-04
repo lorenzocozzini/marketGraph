@@ -23,12 +23,12 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
 
     if (data['chart']['error'] != None):
         print(ticker + ' ' + data['chart']['error']['code']) # TODO: aggiungere a lista da restituire a master così poi non ne calcola le correlazioni
-        return
+        return -1 #perchè errore
 
     #print(data['chart']['result'][0]['indicators']['quote'][0])
     if (data['chart']['result'][0]['indicators']['quote'][0] == {}):
         print(ticker + ' already updated')
-        return
+        return 0 #va tutto ok
 
     open = data['chart']['result'][0]['indicators']['quote'][0]['open']
     high = data['chart']['result'][0]['indicators']['quote'][0]['high']
@@ -59,6 +59,7 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
                 "Volume": volume[i]
                 }
         mycol.insert_one(object)
+    return 0
 
 def get_adj_close(ticker, T):
     myclient = pymongo.MongoClient("mongodb://{}:27017/".format(IP_MONGO_DB)) #160.78.28.56
@@ -99,3 +100,82 @@ def get_correlation(adj_close_1, adj_close_2, T):
     else:
         corr_mantegna = 0 #indefinita
     return corr_mantegna
+
+def get_hist(corr_list):
+    
+    correlation_count = [0] * 10
+
+     #metto nelle varie liste a seconda del valore di corr: sicuro si può fare migliore
+
+    #print(corr_list)
+    correlation_value = []
+    
+    for i in range(len(corr_list)):
+        for tupla in corr_list[i]:
+            correlation_value.append(tupla[2])
+            if(tupla[2] > 0.0 and tupla[2] <= 0.1):
+                correlation_count[0]+=1
+            elif(tupla[2] > 0.1 and tupla[2] <= 0.2):
+                correlation_count[1]+=1
+            elif(tupla[2] > 0.2 and tupla[2] <= 0.3):
+                correlation_count[2]+=1
+            elif(tupla[2] > 0.3 and tupla[2] <= 0.4):
+                correlation_count[3]+=1
+            elif(tupla[2] > 0.4 and tupla[2] <= 0.5):
+                correlation_count[4]+=1
+            elif(tupla[2] > 0.5 and tupla[2] <= 0.6):
+                correlation_count[5]+=1
+            elif(tupla[2] > 0.6 and tupla[2] <= 0.7):
+                correlation_count[6]+=1
+                #print(tupla)
+            elif(tupla[2] > 0.7 and tupla[2] <= 0.8):
+                correlation_count[7]+=1
+            elif(tupla[2] > 0.8 and tupla[2] <= 0.9):
+                correlation_count[8]+=1
+            elif(tupla[2] > 0.9 and tupla[2] <= 1.0):
+                correlation_count[9]+=1
+                #print(tupla)
+    
+    
+    print(correlation_count)
+    print(correlation_value)
+    
+    #disegno istogramma
+    indices = np.arange(len(correlation_count))
+    word = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    plt.bar(indices, correlation_count, color='r')
+    plt.xticks(indices, word, rotation='vertical')
+    plt.tight_layout()
+    plt.show()
+
+    #calcolo Gaussiana
+    mu, std = norm.fit(correlation_value) 
+    plt.hist(correlation_value, density=True, bins=200, label="Data")
+    mn, mx = plt.xlim()
+    plt.xlim(mn, mx)
+    kde_xs = np.linspace(mn, mx, 300)
+    kde = st.gaussian_kde(correlation_value)
+    plt.plot(kde_xs, kde.pdf(kde_xs), label="PDF")
+    plt.legend(loc="upper left")
+    plt.ylabel('Probability')
+    plt.xlabel('Data')
+    title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
+    plt.title(title)
+    plt.show()
+
+    r1 = np.mean(correlation_value)
+    print("\nMean: ", r1)
+    r2 = np.std(correlation_value)
+    print("\nstd: ", r2)
+    r3 = np.var(correlation_value)
+    print("\nvariance: ", r3)
+
+    return std
+
+def get_edges(theta, corr_list):
+    edges_list=[]
+    for i in range(len(corr_list)):
+        for tupla in corr_list[i]:
+            if (tupla[2]>=theta):
+                edges_list.append(tupla)
+    return edges_list

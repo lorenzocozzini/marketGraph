@@ -7,14 +7,20 @@ import multiprocessing
 import networkx as nx
 import pylab
 from utils import get_adj_close, get_correlation, IP_BROKER
+import progressbar
 
 done_msg = 0
+df = pd.read_csv('us_market.csv')
+symbol_array = df["Symbol"].values
 
 def worker(list, return_list):
     id = int(multiprocessing.current_process().name)
+    bar = progressbar.ProgressBar(maxval=20, \
+        widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
     #print(list)
     num_records = int(len(list)/5)
     corr_list = []
+    corrHistPass = []
     #se non è l'ultimo 
     if (id + 1 < 5):
         last_index = num_records*(id+1)
@@ -22,6 +28,8 @@ def worker(list, return_list):
     else:
          last_index = len(list)
     #scarica i dati e calcola correlazioni
+
+    #bar.start()
     for i in range(num_records*id, last_index):
         #print("Ticker 1: " + list[i])
         adj_close_1 = get_adj_close(list[i])
@@ -35,24 +43,18 @@ def worker(list, return_list):
                 #print("adj_close_2 " + list[j], adj_close_2)
                 if (len(adj_close_2) == T and not(None in adj_close_2)):          #calcolo correlazione solo se ho i dati per tutto l'intervallo e non ci sono dati null
                     #calcola correlazione
-                    #print("Correlation " + list[i] + " - " + list[j] + ":")
-                    #correlation = np.corrcoef(adj_close_1, adj_close_2)
-                    #print(correlation)
-                    
                     corr_mantegna = get_correlation(adj_close_1, adj_close_2)
-                    #print("Correlation " + list[i] + " - " + list[j] + ":")
-                    #print(str(corr_mantegna))
-                    
-                    #if -> mostro solo se correlazione > theta
-                    #G.add_edges_from([(list[i], list[j])], weight=corr_mantegna)
-                    if (corr_mantegna > 0.75):
-                        corr_list.append((list[i], list[j], round(corr_mantegna, 3)))
-                    
+                    #bar.update(j+1) #sistemareeee
+                    #sleep(0.2)
+                    corr_list.append((list[i], list[j], round(corr_mantegna, 3))) 
                 else:
                     print(list[j] + " non ha dati sufficienti")
         else:
             print(list[i] + " non ha dati sufficienti")
         return_list[id] = corr_list
+
+        #bar.finish()
+    
     return
 
 def on_connect(client, userdata, flags, rc):
@@ -63,9 +65,14 @@ def on_message(client, userdata, message):
     msg = message.payload.decode()
     print("Messaggio: "+ msg)
     global done_msg
-    if (msg == "DONE"):  #gestire lista aziende non trovate
+    global symbol_array
+    if (type(msg) == list):  #gestire lista aziende non trovate
         done_msg += 1 
         print(done_msg)
+        print(msg)
+        l3 = [x for x in symbol_array if x not in msg]#tolgo da lista gli errori
+        symbol_array = l3
+        
 
 def elab_dati(symbol_array):
     G = nx.Graph()
@@ -95,8 +102,6 @@ def elab_dati(symbol_array):
     pylab.show()
 
 if __name__ == '__main__':
-    df = pd.read_csv('us_market.csv')
-    symbol_array = df["Symbol"].values
 
     message = json.dumps(symbol_array.tolist())
 

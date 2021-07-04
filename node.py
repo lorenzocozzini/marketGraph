@@ -4,6 +4,7 @@ import sys
 import pymongo
 from datetime import datetime
 import utils
+import json
 from math import modf
 #import progressbar
 
@@ -27,6 +28,7 @@ def get_tickers(message, id_node, num_nodes):
     return sub_list
 
 def update_data(stocklist):
+    error_list=[]
     myclient = pymongo.MongoClient("mongodb://{}:27017/".format(utils.IP_MONGO_DB)) #160.78.28.56
     mydb = myclient["MarketDB"]
     #bar = progressbar.ProgressBar(maxval=len(stocklist)).start()
@@ -41,9 +43,11 @@ def update_data(stocklist):
         if (last_doc != None):
             last_date = last_doc["Datetime"]
         else:
-            last_date = datetime(2010, 1, 1) 
+            last_date = datetime(2000, 1, 1) #Scarico dati dal 2000
         print(last_date)
-        utils.download_finance(ticker=ticker, interval='1d', period1=last_date)
+        if(utils.download_finance(ticker=ticker, interval='1d', period1=last_date)==-1):
+            error_list.append(ticker)
+    return error_list
         #bar.update(i)
         #i += 1
 
@@ -64,10 +68,10 @@ def on_message(client, userdata, message):
     print(message.payload.decode())
     symbol_string = get_tickers(message.payload.decode(), id, n_nodi) 
     #aggiorna dati
-    update_data(symbol_string)
+    error_list= update_data(symbol_string)
     #informa master quando hai fatto
     print("Fine download - " + str(id))
-    client.publish("Node", "DONE") # TODO : inviare a server lista di ticker che non è riuscito a scaricare
+    client.publish("Node", json.dumps(error_list)) # TODO : inviare a server lista di ticker che non è riuscito a scaricare
 
 while True:
     client.on_connect = on_connect
