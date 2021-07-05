@@ -8,6 +8,8 @@ pip install amqtt
 pip install hbmqtt
 pip install networkx
 pip install progressbar
+pip install matplotlib
+pip install scipy
 ```
 
 Start broker
