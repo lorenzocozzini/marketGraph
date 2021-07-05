@@ -42,6 +42,7 @@ def worker(list, return_list):
                 adj_close_2 = get_adj_close(list[j])
                 #print("adj_close_2 " + list[j], adj_close_2)
                 if (len(adj_close_2) == T and not(None in adj_close_2)):          #calcolo correlazione solo se ho i dati per tutto l'intervallo e non ci sono dati null
+                                                                                  #mettere controllo per corrispondenza giorni???
                     #calcola correlazione
                     corr_mantegna = get_correlation(adj_close_1, adj_close_2)
                     #bar.update(j+1) #sistemareeee
@@ -89,10 +90,24 @@ def elab_dati(symbol_array):
         job.join()
     
     print("Fine processing correlation")
-    #disegno grafo
+
+    theta = utils.get_hist(corr_list)
+
+    edges_list= utils.get_edges(theta, corr_list)
+
+    #Creo il file
+    import csv
+    with open('correlation.csv', mode='w', newline='') as csv_file:
+        colonne = ['Source', 'Target', 'Weight']
+        writer = csv.DictWriter(csv_file, fieldnames=colonne)
+        writer.writeheader()
+
+    
+    #disegno grafo e aggiungo dati al file
     for i in range(5):
         for tupla in corr_list[i]:
-            G.add_edges_from([(tupla[0],tupla[1])], weight=tupla[2])   #TODO: stampare anche su file 
+            G.add_edges_from([(tupla[0],tupla[1])], weight=tupla[2])
+            writer.writerow({'Source': tupla[0], 'Target': tupla[1], 'Weight': tupla[2]})
     
     edge_labels=dict([((u,v,),d['weight'])
                 for u,v,d in G.edges(data=True)])
