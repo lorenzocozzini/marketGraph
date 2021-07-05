@@ -20,13 +20,23 @@ import numpy as np
 
 IP_BROKER = '160.78.100.132'
 IP_MONGO_DB = '160.78.28.56'
+timeStart = 0
+
+def delete_duplicates(arraylist):
+    new_list = []
+    for x in arraylist:
+        if x not in new_list:
+            new_list.append(x)
+    return new_list
 
 def download_finance(ticker, interval, period1, period2 = datetime.now()):
+    
     period1 = int(time.mktime(period1.timetuple()))
-    period2 = period2.replace(hour=14, minute=30, second=0, microsecond=0)
+    #period2 = period2.replace(hour=14, minute=30, second=0, microsecond=0)
     period2 = int(time.mktime(period2.timetuple()))
 
     query_string = f'https://query1.finance.yahoo.com/v7/finance/chart/{ticker}?period1={period1}&period2={period2}&interval={interval}&events=history&includeAdjustedClose=true'
+    
     print(query_string)
     response = requests.get(query_string)
     data = json.loads(response.content.decode())
@@ -69,7 +79,20 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
                 "AdjClose": adj_close[i],
                 "Volume": volume[i]
                 }
-        mycol.insert_one(object)
+        
+        #start = timestamp[i].date()
+        start= datetime(timestamp[i].year, timestamp[i].month, timestamp[i].day)
+        end= datetime(timestamp[i].year, timestamp[i].month, timestamp[i].day, 23, 59, 59)
+        query = {'Datetime': {'$gte': start , '$lt': end}}
+        find_date = mycol.find_one(query)
+        print(query)
+        print("FIND DATE:")
+        print(find_date)
+        #find_date = mycol.find_one({"Datetime":timestamp[i]})
+        if (find_date == None):
+            mycol.insert_one(object)  #upsert = true
+        else:
+            print("ALREADY in DB")
     return 0
 
 def get_adj_close(ticker, T):
@@ -77,17 +100,30 @@ def get_adj_close(ticker, T):
     mydb = myclient["MarketDB"]
     mycol = mydb[ticker]
     cursor = mycol.find(
-    sort = [( '_id', pymongo.DESCENDING )], 
+    sort = [( 'Datetime', pymongo.DESCENDING )], 
     limit= T #numero di giorni che vogliamo
     )
     last_doc = list(cursor)
     #print(last_doc)
     adj_close = []
     for j in last_doc:
-        adj_close.append(j["AdjClose"])
+        adj_close.append((j["Datetime"], j["AdjClose"]))
     return adj_close
 
-def get_correlation(adj_close_1, adj_close_2, T):
+def same_date(adj_close_1, adj_close_2):
+    for i in range(len(adj_close_1)):
+        if (adj_close_1[i][0] != adj_close_2[i][0]):
+            return False
+            
+    return True
+
+def get_correlation(tupla_1, tupla_2, T):
+    adj_close_1 = []
+    adj_close_2 = []
+    for i in range(len(tupla_1)):
+        adj_close_1.append(tupla_1[i][1])
+        adj_close_2.append(tupla_2[i][1])
+  
     #arg1
     product = [x*y for x,y in zip(adj_close_1,adj_close_2)]
     arg1 = sum(product)/T
@@ -114,16 +150,16 @@ def get_correlation(adj_close_1, adj_close_2, T):
 
 def get_hist(corr_list):
     
-    correlation_count = [0] * 10
+    #correlation_count = [0] * 10
 
-     #metto nelle varie liste a seconda del valore di corr: sicuro si può fare migliore
-
-    correlation_value = []
+    #calcolo istogramma per ogni range di valori per le correlazioni
     
+    correlation_value = []
+  
     for i in range(len(corr_list)):
         for tupla in corr_list[i]:
             correlation_value.append(tupla[2])
-            if(tupla[2] > 0.0 and tupla[2] <= 0.1):
+            """ if(tupla[2] > 0.0 and tupla[2] <= 0.1):
                 correlation_count[0]+=1
             elif(tupla[2] > 0.1 and tupla[2] <= 0.2):
                 correlation_count[1]+=1
@@ -142,16 +178,18 @@ def get_hist(corr_list):
             elif(tupla[2] > 0.8 and tupla[2] <= 0.9):
                 correlation_count[8]+=1
             elif(tupla[2] > 0.9 and tupla[2] <= 1.0):
-                correlation_count[9]+=1
-
-    #disegno istogramma
+                correlation_count[9]+=1 """
+                
+    #print(correlation_value)
+    
+    """ #disegno istogramma
     indices = np.arange(len(correlation_count))
     word = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     plt.bar(indices, correlation_count, color='r')
     plt.xticks(indices, word, rotation='vertical')
     plt.tight_layout()
     plt.show()
-
+    """
     #calcolo Gaussiana
     mu, std = norm.fit(correlation_value) 
     plt.hist(correlation_value, density=True, bins=200, label="Data")
@@ -183,3 +221,33 @@ def get_edges(theta, corr_list):
             if (tupla[2]>=theta):
                 edges_list.append(tupla)
     return edges_list
+
+
+def start_timer():
+    global timeStart
+    timeStart  = time.time() * 1000000000
+    interval = 0
+    return interval
+    
+def increase_timer(interval):
+    global timeStart
+    timeStop = time.time() * 1000000000
+    interval += (timeStop - timeStart) / 1000000
+    timeStart = timeStop
+    return interval
+
+def get_symbol_array():
+    myclient = pymongo.MongoClient("mongodb://{}:27017/".format(IP_MONGO_DB))  #160.78.28.56
+    mydb = myclient["MarketDB"]
+    mycol = mydb["Markets"]
+    results = mycol.find({}, {'Symbol':1, '_id':0})
+    symbol_array = []
+    for x in results:
+        if x["Symbol"] not in symbol_array:
+            symbol_array.append(x["Symbol"])
+    
+    if (len(symbol_array) == 0):
+        df = pd.read_csv('us_market.csv')
+        symbol_array = df["Symbol"].values
+        symbol_array = delete_duplicates(symbol_array)
+    return(symbol_array)

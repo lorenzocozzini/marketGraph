@@ -3,10 +3,11 @@ import paho.mqtt.client as mqtt
 import sys
 import pymongo
 from datetime import datetime
-import utils
+import utils 
 import json
 from math import modf
-#import progressbar
+import progressbar
+from time import sleep
 
 def get_tickers(message, id_node, num_nodes):
     
@@ -23,33 +24,41 @@ def get_tickers(message, id_node, num_nodes):
     else:
          last_index = len_list
     sub_list = list_msg[id_node*num_records:last_index] 
-    print("Downloading: ")
-    print(sub_list)
+    #print("Downloading: ")
+    #print(sub_list)
     return sub_list
 
 def update_data(stocklist):
     error_list=[]
     myclient = pymongo.MongoClient("mongodb://{}:27017/".format(utils.IP_MONGO_DB)) #160.78.28.56
     mydb = myclient["MarketDB"]
-    #bar = progressbar.ProgressBar(maxval=len(stocklist)).start()
+    bar = progressbar.ProgressBar(maxval=len(stocklist), \
+        widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
     #controllo quando ho fatto l'ultimo aggiornamento
-    #i = 0
+    i = 0
+    bar.start()
     for ticker in stocklist:
         mycol = mydb[ticker]
         last_doc = mycol.find_one(
-        sort=[( '_id', pymongo.DESCENDING )]
+        sort=[( 'Datetime', pymongo.DESCENDING )] #prima _id
         )
+        print("LAST DOC:")
         print(last_doc)
         if (last_doc != None):
             last_date = last_doc["Datetime"]
         else:
-            last_date = datetime(2000, 1, 1) #Scarico dati dal 2000
+            last_date = datetime(2021, 7, 1) #Scarico dati dal 2000
         print(last_date)
         if(utils.download_finance(ticker=ticker, interval='1d', period1=last_date)==-1):
             error_list.append(ticker)
+            
+        bar.update(i) #sistemareeee
+        sleep(0.2)
+        i += 1
+    
+    bar.finish()      
     return error_list
-        #bar.update(i)
-        #i += 1
+       
 
 client = mqtt.Client()
 client.connect(utils.IP_BROKER, 9999)
@@ -65,12 +74,13 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe("Symbol")
 
 def on_message(client, userdata, message):
-    print(message.payload.decode())
+    #print(message.payload.decode())
     symbol_string = get_tickers(message.payload.decode(), id, n_nodi) 
     #aggiorna dati
     error_list= update_data(symbol_string)
     #informa master quando hai fatto
     print("Fine download - " + str(id))
+    print(error_list)
     client.publish("Node", json.dumps(error_list)) # TODO : inviare a server lista di ticker che non è riuscito a scaricare
 
 while True:

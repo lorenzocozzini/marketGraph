@@ -1,12 +1,4 @@
-Fare:
-    - Sistemare gestione dei messaggi del master (non prende int done, perchè?)
-        - Capire quel on_message se si può fare sequenziale tipo bloccante
-    - Gestire eventuali fail dei nodi
-    - Nodi tengono traccia delle aziende che non hanno dati/ problemi nel download e inviano lista al master, che li toglie dalla lista completa
-    - Aggiungere a MongoDB Collection per le aziende
-    - calcolo tempo totale per Elaborazione
-    - File delle correlazione assieme al grafo
-
+- pulire codice
 - NB ricorda di far chiudere porte al pc per MongoDB alla fine!
     netsh advfirewall reset
     
