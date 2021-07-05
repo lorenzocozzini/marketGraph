@@ -13,8 +13,8 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 
-IP_BROKER = 'localhost' #'160.78.100.132'
-IP_MONGO_DB = 'localhost' #'160.78.28.56'
+IP_BROKER = '160.78.100.132'
+IP_MONGO_DB = '160.78.28.56'
 timeStart = 0
 
 def delete_duplicates(arraylist):
