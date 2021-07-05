@@ -118,7 +118,6 @@ def get_hist(corr_list):
 
      #metto nelle varie liste a seconda del valore di corr: sicuro si può fare migliore
 
-    #print(corr_list)
     correlation_value = []
     
     for i in range(len(corr_list)):
@@ -138,19 +137,13 @@ def get_hist(corr_list):
                 correlation_count[5]+=1
             elif(tupla[2] > 0.6 and tupla[2] <= 0.7):
                 correlation_count[6]+=1
-                #print(tupla)
             elif(tupla[2] > 0.7 and tupla[2] <= 0.8):
                 correlation_count[7]+=1
             elif(tupla[2] > 0.8 and tupla[2] <= 0.9):
                 correlation_count[8]+=1
             elif(tupla[2] > 0.9 and tupla[2] <= 1.0):
                 correlation_count[9]+=1
-                #print(tupla)
-    
-    
-    #print(correlation_count)
-    #print(correlation_value)
-    
+
     #disegno istogramma
     indices = np.arange(len(correlation_count))
     word = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
