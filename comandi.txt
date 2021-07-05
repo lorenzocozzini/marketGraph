@@ -16,6 +16,6 @@ python3 node.py 7 10
 python3 node.py 8 10
 python3 node.py 9 10
 
-python3 master.py
+python3 master.py 10 20
 
 
