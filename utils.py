@@ -7,19 +7,14 @@ import json
 import requests
 from math import sqrt
 from scipy.stats import norm
-from time import sleep
-import progressbar
 from math import sqrt
 import scipy.stats as st
 from datetime import datetime 
-import networkx as nx
 import matplotlib.pyplot as plt
-import pylab
-import matplotlib.mlab as mlab
 import numpy as np
 
-IP_BROKER = '160.78.100.132'
-IP_MONGO_DB = '160.78.28.56'
+IP_BROKER = 'localhost' #'160.78.100.132'
+IP_MONGO_DB = 'localhost' #'160.78.28.56'
 timeStart = 0
 
 def delete_duplicates(arraylist):
@@ -37,13 +32,13 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
 
     query_string = f'https://query1.finance.yahoo.com/v7/finance/chart/{ticker}?period1={period1}&period2={period2}&interval={interval}&events=history&includeAdjustedClose=true'
     
-    print(query_string)
+    #print(query_string)
     response = requests.get(query_string)
     data = json.loads(response.content.decode())
     #print(data)
 
     if (data['chart']['error'] != None):
-        print(ticker + ' ' + data['chart']['error']['code']) # TODO: aggiungere a lista da restituire a master così poi non ne calcola le correlazioni
+        print(ticker + ' ' + data['chart']['error']['code']) 
         return -1 #perchè errore
 
     #print(data['chart']['result'][0]['indicators']['quote'][0])
@@ -85,14 +80,12 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
         end= datetime(timestamp[i].year, timestamp[i].month, timestamp[i].day, 23, 59, 59)
         query = {'Datetime': {'$gte': start , '$lt': end}}
         find_date = mycol.find_one(query)
-        print(query)
-        print("FIND DATE:")
-        print(find_date)
+        
         #find_date = mycol.find_one({"Datetime":timestamp[i]})
         if (find_date == None):
             mycol.insert_one(object)  #upsert = true
         else:
-            print("ALREADY in DB")
+            print(ticker + " already in DB")
     return 0
 
 def get_adj_close(ticker, T):
@@ -192,10 +185,10 @@ def get_hist(corr_list):
     """
     #calcolo Gaussiana
     mu, std = norm.fit(correlation_value) 
-    plt.hist(correlation_value, density=True, bins=200, label="Data")
+    plt.hist(correlation_value, density=True, bins=20, label="Data") #diminuire bins
     mn, mx = plt.xlim()
     plt.xlim(mn, mx)
-    kde_xs = np.linspace(mn, mx, 300)
+    kde_xs = np.linspace(mn, mx, 20)
     kde = st.gaussian_kde(correlation_value)
     plt.plot(kde_xs, kde.pdf(kde_xs), label="PDF")
     plt.legend(loc="upper left")
@@ -203,6 +196,10 @@ def get_hist(corr_list):
     plt.xlabel('Data')
     title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
     plt.title(title)
+    
+    fig = plt.figure()
+    fig.savefig("histogram_gaussian.png",  dpi=fig.dpi)
+    plt.savefig('foo.png', bbox_inches='tight')
     plt.show()
 
     r1 = np.mean(correlation_value)

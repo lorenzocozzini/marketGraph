@@ -3,7 +3,7 @@ import asyncio
 from hbmqtt.broker import Broker
 from hbmqtt.client import MQTTClient, ClientException
 from hbmqtt.mqtt.constants import QOS_1
-from utils import  IP_BROKER
+from utils import IP_BROKER
 
 logger = logging.getLogger(__name__)
 

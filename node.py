@@ -3,7 +3,7 @@ import paho.mqtt.client as mqtt
 import sys
 import pymongo
 from datetime import datetime
-import utils 
+from utils import IP_BROKER, IP_MONGO_DB, download_finance
 import json
 from math import modf
 import progressbar
@@ -30,7 +30,7 @@ def get_tickers(message, id_node, num_nodes):
 
 def update_data(stocklist):
     error_list=[]
-    myclient = pymongo.MongoClient("mongodb://{}:27017/".format(utils.IP_MONGO_DB)) #160.78.28.56
+    myclient = pymongo.MongoClient("mongodb://{}:27017/".format(IP_MONGO_DB)) #160.78.28.56
     mydb = myclient["MarketDB"]
     bar = progressbar.ProgressBar(maxval=len(stocklist), \
         widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
@@ -38,18 +38,19 @@ def update_data(stocklist):
     i = 0
     bar.start()
     for ticker in stocklist:
+        print(ticker)
         mycol = mydb[ticker]
         last_doc = mycol.find_one(
         sort=[( 'Datetime', pymongo.DESCENDING )] #prima _id
         )
-        print("LAST DOC:")
-        print(last_doc)
+        #print("LAST DOC:")
+        #print(last_doc)
         if (last_doc != None):
             last_date = last_doc["Datetime"]
         else:
-            last_date = datetime(2021, 7, 1) #Scarico dati dal 2000
-        print(last_date)
-        if(utils.download_finance(ticker=ticker, interval='1d', period1=last_date)==-1):
+            last_date = datetime(2000, 1, 1) #Scarico dati dal 2000
+        #print(last_date)
+        if(download_finance(ticker=ticker, interval='1d', period1=last_date)==-1):
             error_list.append(ticker)
             
         bar.update(i) #sistemareeee
@@ -61,7 +62,7 @@ def update_data(stocklist):
        
 
 client = mqtt.Client()
-client.connect(utils.IP_BROKER, 9999)
+client.connect(IP_BROKER, 9999)
 #metti passAGGIO IP DA TERMINALE
 id = int(sys.argv[1])    #py node.py 0
 n_nodi = int(sys.argv[2]) 
@@ -81,7 +82,7 @@ def on_message(client, userdata, message):
     #informa master quando hai fatto
     print("Fine download - " + str(id))
     print(error_list)
-    client.publish("Node", json.dumps(error_list)) # TODO : inviare a server lista di ticker che non è riuscito a scaricare
+    client.publish("Node", json.dumps(error_list)) 
 
 while True:
     client.on_connect = on_connect

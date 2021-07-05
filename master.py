@@ -14,7 +14,7 @@ done_msg = 0
 timeout = 3600000000000 #un'ora 
 
 symbol_array = get_symbol_array()
-#symbol_array = symbol_array[4000:4100] #TODO TOGLI
+symbol_array = symbol_array[4000:4100] #TODO TOGLI
 T = int(sys.argv[2]) 
  
 def worker(list, return_list):
