@@ -3,7 +3,7 @@ import asyncio
 from hbmqtt.broker import Broker
 from hbmqtt.client import MQTTClient, ClientException
 from hbmqtt.mqtt.constants import QOS_1
-from utils import  IP_BROKER
+#from utils import IP_BROKER
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +11,7 @@ config = {
         'listeners': {
             'default': {
                 'max-connections': 50000,
-                'bind': '{}:9999'.format(IP_BROKER),    # 0.0.0.0:1883 #160.78.100.132
+                'bind': '{}:9999'.format('160.78.100.132'),    # 0.0.0.0:1883 #160.78.100.132
                 'type': 'tcp',
             }
         },
@@ -34,7 +34,7 @@ def startBroker():
 @asyncio.coroutine
 def brokerGetMessage():
     C = MQTTClient()
-    yield from C.connect('mqtt://{}:9999/'.format(IP_BROKER))
+    yield from C.connect('mqtt://{}:9999/'.format('160.78.100.132'))
     yield from C.subscribe([
         ("Symbol", QOS_1),
         ("Node", QOS_1)
