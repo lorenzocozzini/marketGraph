@@ -104,10 +104,10 @@ def elab_dati(symbol_array):
 
     
     #disegno grafo e aggiungo dati al file
-    for i in range(5):
-        for tupla in corr_list[i]:
-            G.add_edges_from([(tupla[0],tupla[1])], weight=tupla[2])
-            writer.writerow({'Source': tupla[0], 'Target': tupla[1], 'Weight': tupla[2]})
+    #for i in range(5):
+    for tupla in edges_list:
+        G.add_edges_from([(tupla[0],tupla[1])], weight=tupla[2])
+        writer.writerow({'Source': tupla[0], 'Target': tupla[1], 'Weight': tupla[2]})
     
     edge_labels=dict([((u,v,),d['weight'])
                 for u,v,d in G.edges(data=True)])
