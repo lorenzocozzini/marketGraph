@@ -6,6 +6,17 @@ import pymongo
 import json
 import requests
 from math import sqrt
+from scipy.stats import norm
+from time import sleep
+import progressbar
+from math import sqrt
+import scipy.stats as st
+from datetime import datetime 
+import networkx as nx
+import matplotlib.pyplot as plt
+import pylab
+import matplotlib.mlab as mlab
+import numpy as np
 
 IP_BROKER = '160.78.100.132'
 IP_MONGO_DB = '160.78.28.56'
@@ -137,8 +148,8 @@ def get_hist(corr_list):
                 #print(tupla)
     
     
-    print(correlation_count)
-    print(correlation_value)
+    #print(correlation_count)
+    #print(correlation_value)
     
     #disegno istogramma
     indices = np.arange(len(correlation_count))
