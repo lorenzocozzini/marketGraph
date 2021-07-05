@@ -213,7 +213,6 @@ if __name__ == '__main__':
     #corrHist = manager.dict()
    
     for i in range(5):
-        #p = multiprocessing.Process(name=str(i),target=worker, args=(symbol_array, corr_list))
         p = multiprocessing.Process(name=str(i),target=worker, args=(sub_list, corr_list))
         jobs.append(p)
         p.start()
