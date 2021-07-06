@@ -87,15 +87,15 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
     return 0
 
 def get_adj_close(ticker, T):
-    myclient = pymongo.MongoClient("mongodb://{}:27017/".format(IP_MONGO_DB)) #160.78.28.56
+    
+    myclient = pymongo.MongoClient("mongodb://{}:27017/".format(IP_MONGO_DB))
     mydb = myclient["MarketDB"]
     mycol = mydb[ticker]
     cursor = mycol.find(
-    sort = [( 'Datetime', pymongo.DESCENDING )], 
-    limit= T #numero di giorni che vogliamo
+        sort = [( 'Datetime', pymongo.DESCENDING )], 
+        limit= T
     )
     last_doc = list(cursor)
-    #print(last_doc)
     adj_close = []
     for j in last_doc:
         adj_close.append((j["Datetime"], j["AdjClose"]))
