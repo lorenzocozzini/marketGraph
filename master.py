@@ -112,7 +112,7 @@ def elab_dati(symbol_array):
 
 if __name__ == '__main__':
 
-    message = json.dumps(symbol_array) 
+    """ message = json.dumps(symbol_array) 
 
     client = mqtt.Client()
     client.connect(IP_BROKER, 9999)
@@ -122,7 +122,7 @@ if __name__ == '__main__':
    
     interval = start_timer()
     while (done_msg < n_nodes):
-        client.on_connect = on_connect
+        client.on_connect = on_connects
         client.on_message = on_message
         #https://stackoverflow.com/a/62950290
         client.loop_start()    
@@ -130,7 +130,7 @@ if __name__ == '__main__':
         if (interval > timeout):
             print("Node in fail, market graph may not be complete")
             break
-        client.loop_stop()
+        client.loop_stop() """
 
     
     print("Message exchange terminated")

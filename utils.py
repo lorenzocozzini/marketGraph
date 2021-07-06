@@ -109,11 +109,6 @@ def same_date(adj_close_1, adj_close_2):
     return True
 
 def get_correlation(adj_close_1, adj_close_2, T):
-    """ adj_close_1 = []
-    adj_close_2 = []
-    for i in range(len(tupla_1)):
-        adj_close_1.append(tupla_1[i][1])
-        adj_close_2.append(tupla_2[i][1]) """
   
     # Calcolo componenti numeratore 
     product = [x*y for x,y in zip(adj_close_1,adj_close_2)]
