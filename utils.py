@@ -162,8 +162,6 @@ def get_threshold(correlation_list):
     title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
     plt.title(title)
     
-    fig = plt.figure()
-    fig.savefig("histogram_gaussian.png",  dpi=fig.dpi)
     plt.savefig('foo.png', bbox_inches='tight')
     plt.show()
 
