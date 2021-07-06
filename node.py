@@ -59,11 +59,12 @@ def update_data(stocklist):
     bar.finish()
     return error_list
 
-client = mqtt.Client()
-client.connect(IP_BROKER, 9999)
 
 id = int(sys.argv[1])
 n_nodi = int(sys.argv[2])
+
+client = mqtt.Client(client_id=str(id))
+client.connect(IP_BROKER, 9999, keepalive=7200)
 
 print("Node id: " + str(id))
 

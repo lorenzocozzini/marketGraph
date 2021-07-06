@@ -40,3 +40,28 @@ nx.draw_networkx(G, arrows=True, **options)
 #nx.draw_networkx_edge_labels(G,pos,edge_labels=edge_labels)
 #nx.draw(G,pos, node_color = values, node_size=1500,edge_color=edge_colors,edge_cmap=plt.cm.Reds)
 pylab.show()
+
+
+# importing the required module
+import matplotlib.pyplot as plt
+  
+# x axis values
+x = [1,2,3]
+# corresponding y axis values
+y = [2,4,1]
+  
+# plotting the points 
+plt.plot(x, y)
+  
+# naming the x axis
+plt.xlabel('x - axis')
+# naming the y axis
+plt.ylabel('y - axis')
+  
+# giving a title to my graph
+plt.title('My first graph!')
+plt.savefig('foo.png', bbox_inches='tight')
+
+
+# function to show the plot
+plt.show()

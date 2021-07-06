@@ -1,6 +1,6 @@
 import time
 import datetime
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import pymongo
 import json
@@ -25,7 +25,7 @@ def delete_duplicates(arraylist):
     return new_list
 
 def download_finance(ticker, interval, period1, period2 = datetime.now()):
-    
+    period1 += timedelta(days=1)
     period1 = int(time.mktime(period1.timetuple()))
     period2 = int(time.mktime(period2.timetuple()))
 
@@ -108,12 +108,12 @@ def same_date(adj_close_1, adj_close_2):
             
     return True
 
-def get_correlation(tupla_1, tupla_2, T):
-    adj_close_1 = []
+def get_correlation(adj_close_1, adj_close_2, T):
+    """ adj_close_1 = []
     adj_close_2 = []
     for i in range(len(tupla_1)):
         adj_close_1.append(tupla_1[i][1])
-        adj_close_2.append(tupla_2[i][1])
+        adj_close_2.append(tupla_2[i][1]) """
   
     # Calcolo componenti numeratore 
     product = [x*y for x,y in zip(adj_close_1,adj_close_2)]
@@ -162,8 +162,8 @@ def get_threshold(correlation_list):
     title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
     plt.title(title)
     
-    plt.savefig('foo.png', bbox_inches='tight')
-    plt.show()
+    plt.savefig('histogram_gaussian.png', bbox_inches='tight')
+    plt.show() 
 
     r1 = np.mean(correlation_value)
     print("\nMean: ", r1)
@@ -172,6 +172,7 @@ def get_threshold(correlation_list):
     r3 = np.var(correlation_value)
     print("\nvariance: ", r3)
 
+    std = r2
     return std
 
 def get_edges(theta, corr_list):
