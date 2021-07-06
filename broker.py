@@ -11,7 +11,7 @@ config = {
         'listeners': {
             'default': {
                 'max-connections': 50000,
-                'bind': '{}:9999'.format(IP_BROKER),    # 0.0.0.0:1883 #160.78.100.132
+                'bind': '{}:9999'.format(IP_BROKER),
                 'type': 'tcp',
             }
         },

@@ -1,4 +1,3 @@
-- pulire codice
 - NB ricorda di far chiudere porte al pc per MongoDB alla fine!
     netsh advfirewall reset
     
