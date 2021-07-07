@@ -9,7 +9,7 @@ import progressbar
 done_msg = 0
 timeout = 3600000000000 #un'ora, tempo massimo di attesa della risposta dei nodi
 symbol_array = get_symbol_array()
-#symbol_array = symbol_array[4000:5000]
+#symbol_array = symbol_array[4000:4250]
 T = int(sys.argv[2]) 
 N_WORKER = 5
  
@@ -25,13 +25,7 @@ def worker(list, return_list):
          last_index = len(list)
     
     skip_ticker = []
-    # Inizializzazione della progressbar per feedback grafico dell'andamento dei download
-    bar = progressbar.ProgressBar(maxval=(last_index-num_records*id), \
-        widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
-    b = 0
-    bar.start()
-    
-    
+       
     # Per ogni azienda assegnata al worker, si calcolano le correlazioni con tutte le altre aziende (solo quelle successive nella lista dal momento che è commutativa)
     for i in range(num_records*id, last_index):
         datetime_adj_close_1 = get_adj_close(list[i], T)
@@ -67,10 +61,8 @@ def worker(list, return_list):
             print(list[i] + " does not have enough data")
             skip_ticker.append(list[i])
         return_list[id] = corr_list
-        bar.update(b)
-        b += 1
-        
-    bar.finish()
+        print("Processo {}, elaborati {}/{}".format(id, i-(num_records*id), last_index-(num_records*id)))
+
        
 
 def on_connect(client, userdata, flags, rc):
@@ -129,7 +121,7 @@ def elab_dati(symbol_array):
 
 if __name__ == '__main__':
 
-    """ message = json.dumps(symbol_array) 
+    message = json.dumps(symbol_array) 
 
     client = mqtt.Client()
     client.connect(IP_BROKER, 9999)
@@ -147,7 +139,9 @@ if __name__ == '__main__':
         if (interval > timeout):
             print("Node in fail, market graph may not be complete")
             break
-        client.loop_stop() """
+        client.loop_stop() 
+        
+    client.disconnect()
     
     print("Message exchange terminated")
     interval = start_timer()
