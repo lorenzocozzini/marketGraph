@@ -25,7 +25,8 @@ def delete_duplicates(arraylist):
     return new_list
 
 def download_finance(ticker, interval, period1, period2 = datetime.now()):
-    period1 += timedelta(days=1)
+    #period1 += timedelta(days=1)
+    #period2 += timedelta(days=1)
     period1 = int(time.mktime(period1.timetuple()))
     period2 = int(time.mktime(period2.timetuple()))
 
@@ -37,6 +38,7 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
     # Se è presente un errore nella richiesta, si salva il ticker nella lista da mandare indietro al master
     if (data['chart']['error'] != None):
         print(ticker + ' ' + data['chart']['error']['code']) 
+        #if (data['chart']['error']['code']== "Bad Request"):
         return -1 
 
     # Se la richiesta non presenta errori ma non sono presenti dati, significa che tutti i dati sono già stati scaricati in precedenza
@@ -158,7 +160,7 @@ def get_threshold(correlation_list):
     plt.title(title)
     
     plt.savefig('histogram_gaussian.png', bbox_inches='tight')
-    plt.show() 
+    #plt.show() 
 
     r1 = np.mean(correlation_value)
     print("\nMean: ", r1)

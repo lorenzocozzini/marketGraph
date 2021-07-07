@@ -4,12 +4,12 @@ import sys
 import csv
 import multiprocessing
 from utils import get_adj_close, get_symbol_array, get_correlation, start_timer, increase_timer, same_date, get_threshold, get_edges, IP_BROKER
-
+import progressbar
 
 done_msg = 0
 timeout = 3600000000000 #un'ora, tempo massimo di attesa della risposta dei nodi
 symbol_array = get_symbol_array()
-#symbol_array = symbol_array[4000:4400]
+#symbol_array = symbol_array[4000:5000]
 T = int(sys.argv[2]) 
 N_WORKER = 5
  
@@ -24,6 +24,14 @@ def worker(list, return_list):
     else:
          last_index = len(list)
     
+    skip_ticker = []
+    # Inizializzazione della progressbar per feedback grafico dell'andamento dei download
+    bar = progressbar.ProgressBar(maxval=(last_index-num_records*id), \
+        widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+    b = 0
+    bar.start()
+    
+    
     # Per ogni azienda assegnata al worker, si calcolano le correlazioni con tutte le altre aziende (solo quelle successive nella lista dal momento che è commutativa)
     for i in range(num_records*id, last_index):
         datetime_adj_close_1 = get_adj_close(list[i], T)
@@ -34,27 +42,36 @@ def worker(list, return_list):
         # E' possibile calcolare la correlazione solo se sono presenti dati per tutto l'intervallo e non ci sono dati null
         if (len(adj_close_1) == T and not(None in adj_close_1)):
             for j in range(i+1, len(list)):
-                
-                datetime_adj_close_2 = get_adj_close(list[j], T)
                 adj_close_2 = []
-                for h in range(len(datetime_adj_close_2)):
-                    adj_close_2.append(datetime_adj_close_2[h][1])
+                
+                if not(list[j] in skip_ticker): #così evito un po' di chiamate a db
+                    datetime_adj_close_2 = get_adj_close(list[j], T)
                     
-                # E' possibile calcolare la correlazione solo se sono presenti dati per tutto l'intervallo e non ci sono dati null
-                if (len(adj_close_2) == T and not(None in adj_close_2)):
-                    # E' possibile calcolare la correlazione solo se si stanno considerando i dati per le stesse giornate
-                    if (same_date(datetime_adj_close_1, datetime_adj_close_2)):
-                        # Calcolo correlazione
-                        correlation = get_correlation(adj_close_1, adj_close_2, T)
-                        # Aggiungo correlazione alla lista di correlazioni da restituire al master
-                        corr_list.append((list[i], list[j], round(correlation, 3))) 
+                    for h in range(len(datetime_adj_close_2)):
+                        adj_close_2.append(datetime_adj_close_2[h][1])
+                        
+                    # E' possibile calcolare la correlazione solo se sono presenti dati per tutto l'intervallo e non ci sono dati null
+                    if (len(adj_close_2) == T and not(None in adj_close_2)):
+                        # E' possibile calcolare la correlazione solo se si stanno considerando i dati per le stesse giornate
+                        if (same_date(datetime_adj_close_1, datetime_adj_close_2)):
+                            # Calcolo correlazione
+                            correlation = get_correlation(adj_close_1, adj_close_2, T)
+                            # Aggiungo correlazione alla lista di correlazioni da restituire al master
+                            corr_list.append((list[i], list[j], round(correlation, 3))) 
+                        else:
+                            print("Non matching dates, impossible to get correlation for {} - {}".format(list[i], list[j]))
                     else:
-                        print("Non matching dates, impossible to get correlation for {} - {}".format(list[i], list[j]))
-                else:
-                    print(list[j] + " does not have enough data")
+                        print(list[j] + " does not have enough data")
+                        skip_ticker.append(list[j])
         else:
             print(list[i] + " does not have enough data")
+            skip_ticker.append(list[i])
         return_list[id] = corr_list
+        bar.update(b)
+        b += 1
+        
+    bar.finish()
+       
 
 def on_connect(client, userdata, flags, rc):
         print("Connected to a broker!")
@@ -122,7 +139,7 @@ if __name__ == '__main__':
    
     interval = start_timer()
     while (done_msg < n_nodes):
-        client.on_connect = on_connects
+        client.on_connect = on_connect
         client.on_message = on_message
         #https://stackoverflow.com/a/62950290
         client.loop_start()    
@@ -131,7 +148,6 @@ if __name__ == '__main__':
             print("Node in fail, market graph may not be complete")
             break
         client.loop_stop() """
-
     
     print("Message exchange terminated")
     interval = start_timer()
