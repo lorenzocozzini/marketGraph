@@ -105,7 +105,8 @@ def get_adj_close(ticker, T):
 
 def same_date(adj_close_1, adj_close_2):
     for i in range(len(adj_close_1)):
-        if (adj_close_1[i][0] != adj_close_2[i][0]):
+        if (adj_close_1[i][0].date() != adj_close_2[i][0].date()):
+            #print(adj_close_1[i][0] + ' -  ' + adj_close_2[i][0])
             return False
             
     return True
