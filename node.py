@@ -8,6 +8,8 @@ from math import modf
 import progressbar
 from time import sleep
 
+download_ended = False
+
 def get_tickers(message, id_node, num_nodes):
     message = message[2:-2]
     list_msg = message.split('", "')
@@ -81,9 +83,13 @@ def on_message(client, userdata, message):
     print("End download - node " + str(id))
     print(error_list)
     client.publish("Node", json.dumps(error_list)) 
+    global download_ended
+    download_ended = True
 
-while True:
+while not(download_ended):
     client.on_connect = on_connect
     client.on_message = on_message
-    client.loop_forever()
-    
+    client.loop_start()  
+    client.loop_stop()
+
+print("Process is ending")
