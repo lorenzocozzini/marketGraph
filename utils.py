@@ -13,12 +13,11 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 
-IP_BROKER = 'localhost' #'160.78.100.132'
-IP_MONGO_DB = 'localhost'#'160.78.28.56'
+IP_BROKER = '160.78.100.132'
+IP_MONGO_DB = '160.78.28.56'
 timeStart = 0
 DOWNLOAD_TYPE = 0
 EVALUATION_TYPE = 1
-
 
 def delete_duplicates(arraylist):
     new_list = []
@@ -28,8 +27,6 @@ def delete_duplicates(arraylist):
     return new_list
 
 def download_finance(ticker, interval, period1, period2 = datetime.now()):
-    #period1 += timedelta(days=1)
-    #period2 += timedelta(days=1)
     period1 = int(time.mktime(period1.timetuple()))
     period2 = int(time.mktime(period2.timetuple()))
 
@@ -92,7 +89,6 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
     return 0
 
 def get_adj_close(ticker, T):
-    
     myclient = pymongo.MongoClient("mongodb://{}:27017/".format(IP_MONGO_DB))
     mydb = myclient["MarketDB"]
     mycol = mydb[ticker]
@@ -105,18 +101,9 @@ def get_adj_close(ticker, T):
     datetime = []
     adj_close = []
     for j in last_doc:
-        #adj_close.append((j["Datetime"].date().isoformat(), j["AdjClose"], ticker))
         datetime.append(j["Datetime"].date().isoformat())
         adj_close.append(j["AdjClose"])
     return datetime, adj_close
-
-def same_date(adj_close_1, adj_close_2):
-    for i in range(len(adj_close_1)):
-        if (adj_close_1[i][0] != adj_close_2[i][0]):
-            #print(adj_close_1[i][0] + ' -  ' + adj_close_2[i][0])
-            return False
-            
-    return True
 
 def get_correlation(adj_close_1, adj_close_2, T):
   
@@ -171,33 +158,32 @@ def get_threshold(correlation_list):
     #plt.show() 
 
     r1 = np.mean(correlation_value)
-    print("\nMean: ", r1)
+    print("Mean: ", r1)
     r2 = np.std(correlation_value)
-    print("\nstd: ", r2)
+    print("Std: ", r2)
     r3 = np.var(correlation_value)
-    print("\nvariance: ", r3)
+    print("Variance: ", r3)
 
     std = r2
     return std
 
 def get_edges(theta, corr_list):
     edges_list=[]
-    #for i in range(len(corr_list)):
-    for tupla in corr_list:#[i]:
+    for tupla in corr_list:
         if (tupla[2]>=theta):
             edges_list.append(tupla)
     return edges_list
 
 def start_timer():
     global timeStart
-    timeStart  = time.time() * 1000000000
+    timeStart  = time.time() * 1000 #secondi
     interval = 0
     return interval
     
 def increase_timer(interval):
     global timeStart
-    timeStop = time.time() * 1000000000
-    interval += (timeStop - timeStart) / 1000000
+    timeStop = time.time() * 1000
+    interval += (timeStop - timeStart) / 1000 #secondi
     timeStart = timeStop
     return interval
 

@@ -36,7 +36,7 @@ def brokerGetMessage():
     C = MQTTClient()
     yield from C.connect('mqtt://{}:9999/'.format(IP_BROKER))
     yield from C.subscribe([
-        ("Symbol", QOS_1),
+        ("Master", QOS_1),
         ("Node", QOS_1)
     ])
     logger.info('Subscribed!')

@@ -3,70 +3,16 @@ import json
 import sys
 import csv
 import multiprocessing
-from utils import get_adj_close, get_symbol_array, get_correlation, start_timer, increase_timer, same_date, get_threshold, get_edges, IP_BROKER, DOWNLOAD_TYPE, EVALUATION_TYPE
+from utils import get_adj_close, get_symbol_array, start_timer, increase_timer, get_threshold, get_edges, IP_BROKER, DOWNLOAD_TYPE, EVALUATION_TYPE
 import progressbar
 from time import sleep
 
 done_msg = 0
-timeout = 3600000000 #un'ora, tempo massimo di attesa della risposta dei nodi
+timeout = 9000 #due ore e mezzo, tempo massimo di attesa della risposta dei nodi
 symbol_array = get_symbol_array()
-symbol_array = symbol_array[4000:4200]
+#symbol_array = symbol_array[4000:4050]
 T = int(sys.argv[2]) 
-N_WORKER = 5
 correlation_list = []
-
- 
-def worker(list, return_list):
-    id = int(multiprocessing.current_process().name)
-    num_records = int(len(list)/N_WORKER)
-    corr_list = []
-    # Assegnazione delle aziende ai singoli worker per il calcolo delle correlazioni
-    if (id + 1 < N_WORKER):
-        last_index = num_records*(id+1)
-    # L'ultimo worker prende tutti i ticker rimasti
-    else:
-         last_index = len(list)
-    
-    skip_ticker = []
-       
-    # Per ogni azienda assegnata al worker, si calcolano le correlazioni con tutte le altre aziende (solo quelle successive nella lista dal momento che è commutativa)
-    for i in range(num_records*id, last_index):
-        datetime_adj_close_1 = get_adj_close(list[i], T)
-        adj_close_1 = []
-        for k in range(len(datetime_adj_close_1)):
-            adj_close_1.append(datetime_adj_close_1[k][1])
-            
-        # E' possibile calcolare la correlazione solo se sono presenti dati per tutto l'intervallo e non ci sono dati null
-        if (len(adj_close_1) == T and not(None in adj_close_1)):
-            for j in range(i+1, len(list)):
-                adj_close_2 = []
-                
-                if not(list[j] in skip_ticker): #così evito un po' di chiamate a db
-                    datetime_adj_close_2 = get_adj_close(list[j], T)
-                    
-                    for h in range(len(datetime_adj_close_2)):
-                        adj_close_2.append(datetime_adj_close_2[h][1])
-                        
-                    # E' possibile calcolare la correlazione solo se sono presenti dati per tutto l'intervallo e non ci sono dati null
-                    if (len(adj_close_2) == T and not(None in adj_close_2)):
-                        # E' possibile calcolare la correlazione solo se si stanno considerando i dati per le stesse giornate
-                        if (same_date(datetime_adj_close_1, datetime_adj_close_2)):
-                            # Calcolo correlazione
-                            correlation = get_correlation(adj_close_1, adj_close_2, T)
-                            # Aggiungo correlazione alla lista di correlazioni da restituire al master
-                            corr_list.append((list[i], list[j], round(correlation, 3))) 
-                        else:
-                            print("Non matching dates, impossible to get correlation for {} - {}".format(list[i], list[j]))
-                    else:
-                        print(list[j] + " does not have enough data")
-                        skip_ticker.append(list[j])
-        else:
-            print(list[i] + " does not have enough data")
-            skip_ticker.append(list[i])
-        return_list[id] = corr_list
-        print("Processo {}, elaborati {}/{}".format(id, i-(num_records*id), last_index-(num_records*id)))
-
-       
 
 def on_connect(client, userdata, flags, rc):
         print("Connected to a broker!")
@@ -74,7 +20,7 @@ def on_connect(client, userdata, flags, rc):
         
 def on_download_message(client, userdata, message):
     message = json.loads(message.payload.decode())
-    print("Message: "+ str(message))
+    #print("Message: "+ str(message))
     global done_msg
     global symbol_array
     # Gestione delle aziende non trovate
@@ -88,7 +34,7 @@ def on_download_message(client, userdata, message):
     
 def on_evaluation_message(client, userdata, message):
     message = json.loads(message.payload.decode())
-    print("Message: "+ str(message))
+    #print("Message: "+ str(message))
     global done_msg
     global correlation_list
     corr_list = message['correlation_list']
@@ -98,31 +44,16 @@ def on_evaluation_message(client, userdata, message):
     done_msg += 1
 
 def elab_dati(correlation_list):
-    """ jobs = []
-    manager = multiprocessing.Manager()
-    correlation_list = manager.dict()
-    print("Start processing correlation")
-    
-    # Correlazioni calcolate tramite multiprocessing
-    for i in range(N_WORKER):
-        p = multiprocessing.Process(name=str(i),target=worker, args=(symbol_array, correlation_list))
-        jobs.append(p)
-        p.start()
-    
-    # Attesa per il completamento del calcolo delle correlazione da parte di tutti i worker
-    for job in jobs:
-        job.join()
-    
-    print("End processing correlation") """
-
     # Calcolo della soglia per la correlazione
+    print("Finding threshold...")
     theta = get_threshold(correlation_list)
+    
     # Tra tutte le correlazioni, si mantengono quelle con correlazione non inferiore alla soglia
+    print("Getting edges...")
     edges_list = get_edges(theta, correlation_list)
 
-
     # Salvataggio su file dei nodi (Source, Target) e degli archi (Weight) tra essi
-    with open('correlation_FINTA.csv', mode='w', newline='') as csv_file:
+    with open('correlation.csv', mode='w', newline='') as csv_file:
         colonne = ['Source', 'Target', 'Weight']
         writer = csv.DictWriter(csv_file, fieldnames=colonne)
         writer.writeheader()
@@ -132,18 +63,16 @@ def elab_dati(correlation_list):
 
 if __name__ == '__main__':
 
-    #array = json.dumps(symbol_array) 
-
     message = {
         "type" : DOWNLOAD_TYPE,
         "array" :  symbol_array
     }
     
-    print (message)
+    #print (message)
     
     client = mqtt.Client()
     client.connect(IP_BROKER, 9999, keepalive=7200)
-    client.publish("Symbol", json.dumps(message))
+    client.publish("Master", json.dumps(message))
 
     n_nodes = int(sys.argv[1])
    
@@ -160,6 +89,7 @@ if __name__ == '__main__':
         client.loop_stop() 
         
     print("Message exchange terminated")
+    print(interval)
     interval = start_timer()
     
     # Prova #
@@ -172,12 +102,12 @@ if __name__ == '__main__':
     data_array = []
     for ticker in symbol_array:
         datetime, adj_close = get_adj_close(ticker, T)
-        #si può aggiungere direttamente qui il controllo su lunghezza delle liste e presenza di valori none in adj_close
-        data_array.append({
-            "ticker" : ticker, 
-            "datetime" : datetime,
-            "adj_close" : adj_close
-            })
+        if (len(datetime) == T and not(None in adj_close)):
+            data_array.append({
+                "ticker" : ticker, 
+                "datetime" : datetime,
+                "adj_close" : adj_close
+                })
         bar.update(i)
         sleep(0.2)
         i += 1
@@ -189,10 +119,8 @@ if __name__ == '__main__':
         "array" : data_array,
         "T" : T
     }
-    print(message)
-    output = json.dumps(message, indent = 4)   
-    print ("Estimated size: " + str(sys.getsizeof(output) / 1024) + "KB")
-    client.publish("Symbol", json.dumps(message))
+    
+    client.publish("Master", json.dumps(message))
     
     print("Start processing correlation")
     done_msg = 0
@@ -207,8 +135,8 @@ if __name__ == '__main__':
             break
         client.loop_stop() 
     
-    client.disconnect() 
-    ####################
+    client.disconnect()
+    
     elab_dati(correlation_list)
     interval = increase_timer(interval)
-    print("Calculation of correlation completed in " + str(interval/1000) + " seconds")
+    print("Calculation of correlation ended in " + str(interval/1000) + " seconds")
