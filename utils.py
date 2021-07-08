@@ -13,9 +13,12 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 
-IP_BROKER = '160.78.100.132'
-IP_MONGO_DB = '160.78.28.56'
+IP_BROKER = 'localhost' #'160.78.100.132'
+IP_MONGO_DB = 'localhost'#'160.78.28.56'
 timeStart = 0
+DOWNLOAD_TYPE = 0
+EVALUATION_TYPE = 1
+
 
 def delete_duplicates(arraylist):
     new_list = []
@@ -98,14 +101,18 @@ def get_adj_close(ticker, T):
         limit= T
     )
     last_doc = list(cursor)
+    
+    datetime = []
     adj_close = []
     for j in last_doc:
-        adj_close.append((j["Datetime"], j["AdjClose"]))
-    return adj_close
+        #adj_close.append((j["Datetime"].date().isoformat(), j["AdjClose"], ticker))
+        datetime.append(j["Datetime"].date().isoformat())
+        adj_close.append(j["AdjClose"])
+    return datetime, adj_close
 
 def same_date(adj_close_1, adj_close_2):
     for i in range(len(adj_close_1)):
-        if (adj_close_1[i][0].date() != adj_close_2[i][0].date()):
+        if (adj_close_1[i][0] != adj_close_2[i][0]):
             #print(adj_close_1[i][0] + ' -  ' + adj_close_2[i][0])
             return False
             
@@ -142,9 +149,9 @@ def get_threshold(correlation_list):
     
     # Estrazione delle correlazioni dalla lista
     correlation_value = []
-    for i in range(len(correlation_list)):
-        for tupla in correlation_list[i]:
-            correlation_value.append(tupla[2])
+    #for i in range(len(correlation_list)):
+    for tupla in correlation_list:#[i]:
+        correlation_value.append(tupla[2])
 
     # Calcolo dell'istogramma e della Gaussiana
     mu, std = norm.fit(correlation_value) 
@@ -175,12 +182,11 @@ def get_threshold(correlation_list):
 
 def get_edges(theta, corr_list):
     edges_list=[]
-    for i in range(len(corr_list)):
-        for tupla in corr_list[i]:
-            if (tupla[2]>=theta):
-                edges_list.append(tupla)
+    #for i in range(len(corr_list)):
+    for tupla in corr_list:#[i]:
+        if (tupla[2]>=theta):
+            edges_list.append(tupla)
     return edges_list
-
 
 def start_timer():
     global timeStart

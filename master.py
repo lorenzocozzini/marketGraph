@@ -3,15 +3,18 @@ import json
 import sys
 import csv
 import multiprocessing
-from utils import get_adj_close, get_symbol_array, get_correlation, start_timer, increase_timer, same_date, get_threshold, get_edges, IP_BROKER
+from utils import get_adj_close, get_symbol_array, get_correlation, start_timer, increase_timer, same_date, get_threshold, get_edges, IP_BROKER, DOWNLOAD_TYPE, EVALUATION_TYPE
 import progressbar
+from time import sleep
 
 done_msg = 0
-timeout = 3600000000000 #un'ora, tempo massimo di attesa della risposta dei nodi
+timeout = 3600000000 #un'ora, tempo massimo di attesa della risposta dei nodi
 symbol_array = get_symbol_array()
-#symbol_array = symbol_array[4000:4250]
+symbol_array = symbol_array[4000:4200]
 T = int(sys.argv[2]) 
 N_WORKER = 5
+correlation_list = []
+
  
 def worker(list, return_list):
     id = int(multiprocessing.current_process().name)
@@ -69,29 +72,37 @@ def on_connect(client, userdata, flags, rc):
         print("Connected to a broker!")
         client.subscribe("Node")
         
-def on_message(client, userdata, message):
-    msg = message.payload.decode()
-    
-    print("Message: "+ msg)
+def on_download_message(client, userdata, message):
+    message = json.loads(message.payload.decode())
+    print("Message: "+ str(message))
     global done_msg
     global symbol_array
     # Gestione delle aziende non trovate
-    if (msg != '[]'):  
-        
-        msg = msg[2:-2]
-        list_msg = msg.split('", "')
+    list_msg = message['error_list']
+    if (list_msg != []):  
         # Si rimuove dalla lista di aziende quelle che non sono state trovate
         updated_list = [x for x in symbol_array if x not in list_msg]
         symbol_array = updated_list
         print(symbol_array)
-    done_msg += 1 
-        
+    done_msg += 1
+    
+def on_evaluation_message(client, userdata, message):
+    message = json.loads(message.payload.decode())
+    print("Message: "+ str(message))
+    global done_msg
+    global correlation_list
+    corr_list = message['correlation_list']
+    # Gestione delle aziende non trovate
+    if (corr_list != []):  
+        correlation_list.extend(corr_list)
+    done_msg += 1
 
-def elab_dati(symbol_array):
-    jobs = []
+def elab_dati(correlation_list):
+    """ jobs = []
     manager = multiprocessing.Manager()
     correlation_list = manager.dict()
     print("Start processing correlation")
+    
     # Correlazioni calcolate tramite multiprocessing
     for i in range(N_WORKER):
         p = multiprocessing.Process(name=str(i),target=worker, args=(symbol_array, correlation_list))
@@ -102,7 +113,7 @@ def elab_dati(symbol_array):
     for job in jobs:
         job.join()
     
-    print("End processing correlation")
+    print("End processing correlation") """
 
     # Calcolo della soglia per la correlazione
     theta = get_threshold(correlation_list)
@@ -111,7 +122,7 @@ def elab_dati(symbol_array):
 
 
     # Salvataggio su file dei nodi (Source, Target) e degli archi (Weight) tra essi
-    with open('correlation.csv', mode='w', newline='') as csv_file:
+    with open('correlation_FINTA.csv', mode='w', newline='') as csv_file:
         colonne = ['Source', 'Target', 'Weight']
         writer = csv.DictWriter(csv_file, fieldnames=colonne)
         writer.writeheader()
@@ -121,18 +132,25 @@ def elab_dati(symbol_array):
 
 if __name__ == '__main__':
 
-    message = json.dumps(symbol_array) 
+    #array = json.dumps(symbol_array) 
 
+    message = {
+        "type" : DOWNLOAD_TYPE,
+        "array" :  symbol_array
+    }
+    
+    print (message)
+    
     client = mqtt.Client()
-    client.connect(IP_BROKER, 9999)
-    client.publish("Symbol", message)
+    client.connect(IP_BROKER, 9999, keepalive=7200)
+    client.publish("Symbol", json.dumps(message))
 
     n_nodes = int(sys.argv[1])
    
     interval = start_timer()
     while (done_msg < n_nodes):
         client.on_connect = on_connect
-        client.on_message = on_message
+        client.on_message = on_download_message
         #https://stackoverflow.com/a/62950290
         client.loop_start()    
         interval = increase_timer(interval)
@@ -141,10 +159,56 @@ if __name__ == '__main__':
             break
         client.loop_stop() 
         
-    client.disconnect()
-    
     print("Message exchange terminated")
     interval = start_timer()
-    elab_dati(symbol_array)
+    
+    # Prova #
+    # Inizializzazione della progressbar per feedback grafico dell'andamento dei download
+    print("Start downloading adjusted close for period of interest (last {} days)".format(T))
+    bar = progressbar.ProgressBar(maxval=len(symbol_array), \
+        widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+    i = 0
+    bar.start()
+    data_array = []
+    for ticker in symbol_array:
+        datetime, adj_close = get_adj_close(ticker, T)
+        #si può aggiungere direttamente qui il controllo su lunghezza delle liste e presenza di valori none in adj_close
+        data_array.append({
+            "ticker" : ticker, 
+            "datetime" : datetime,
+            "adj_close" : adj_close
+            })
+        bar.update(i)
+        sleep(0.2)
+        i += 1
+    
+    bar.finish()
+    
+    message = {
+        "type" : EVALUATION_TYPE,
+        "array" : data_array,
+        "T" : T
+    }
+    print(message)
+    output = json.dumps(message, indent = 4)   
+    print ("Estimated size: " + str(sys.getsizeof(output) / 1024) + "KB")
+    client.publish("Symbol", json.dumps(message))
+    
+    print("Start processing correlation")
+    done_msg = 0
+    while (done_msg < n_nodes):
+        client.on_connect = on_connect
+        client.on_message = on_evaluation_message
+        #https://stackoverflow.com/a/62950290
+        client.loop_start()
+        interval = increase_timer(interval)
+        if (interval > timeout):
+            print("Node in fail, market graph may not be complete")
+            break
+        client.loop_stop() 
+    
+    client.disconnect() 
+    ####################
+    elab_dati(correlation_list)
     interval = increase_timer(interval)
     print("Calculation of correlation completed in " + str(interval/1000) + " seconds")
