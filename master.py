@@ -2,7 +2,7 @@ import paho.mqtt.client as mqtt
 import json
 import sys
 import csv
-import multiprocessing
+from datetime import timedelta
 from utils import get_adj_close, get_symbol_array, start_timer, increase_timer, get_threshold, get_edges, IP_BROKER, DOWNLOAD_TYPE, EVALUATION_TYPE
 import progressbar
 from time import sleep
@@ -29,7 +29,7 @@ def on_download_message(client, userdata, message):
         # Si rimuove dalla lista di aziende quelle che non sono state trovate
         updated_list = [x for x in symbol_array if x not in list_msg]
         symbol_array = updated_list
-        print(symbol_array)
+        #print(symbol_array)
     done_msg += 1
     
 def on_evaluation_message(client, userdata, message):
@@ -89,7 +89,9 @@ if __name__ == '__main__':
         client.loop_stop() 
         
     print("Message exchange terminated")
-    print(interval)
+    interval = increase_timer(interval)
+    print("Elapsed time for downloading " + str(timedelta(seconds=interval)))
+    
     interval = start_timer()
     
     # Prova #
@@ -139,4 +141,4 @@ if __name__ == '__main__':
     
     elab_dati(correlation_list)
     interval = increase_timer(interval)
-    print("Calculation of correlation ended in " + str(interval/1000) + " seconds")
+    print("Elapsed time for correlation " + str(timedelta(seconds=interval)))
