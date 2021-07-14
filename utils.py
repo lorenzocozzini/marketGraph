@@ -12,6 +12,7 @@ import scipy.stats as st
 from datetime import datetime 
 import matplotlib.pyplot as plt
 import numpy as np
+from json.decoder import JSONDecodeError
 
 IP_BROKER = '160.78.100.132'
 IP_MONGO_DB = '160.78.28.56'
@@ -29,64 +30,69 @@ def delete_duplicates(arraylist):
 def download_finance(ticker, interval, period1, period2 = datetime.now()):
     period1 = int(time.mktime(period1.timetuple()))
     period2 = int(time.mktime(period2.timetuple()))
-
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
     query_string = f'https://query1.finance.yahoo.com/v7/finance/chart/{ticker}?period1={period1}&period2={period2}&interval={interval}&events=history&includeAdjustedClose=true'
-    #print(query_string)
-    response = requests.get(query_string)
-    data = json.loads(response.content.decode())
+    print(query_string)
+    response = requests.get(query_string, headers=headers)
+    
+    try:
+        #print(response)
+        data = json.loads(response.content.decode())
 
-    # Se è presente un errore nella richiesta, si salva il ticker nella lista da mandare indietro al master
-    if (data['chart']['error'] != None):
-        print(ticker + ' ' + data['chart']['error']['code']) 
-        #if (data['chart']['error']['code']== "Bad Request"):
-        return -1 
+        # Se è presente un errore nella richiesta, si salva il ticker nella lista da mandare indietro al master
+        if (data['chart']['error'] != None):
+            print(ticker + ' ' + data['chart']['error']['code']) 
+            #if (data['chart']['error']['code']== "Bad Request"):
+            return -1 
 
-    # Se la richiesta non presenta errori ma non sono presenti dati, significa che tutti i dati sono già stati scaricati in precedenza
-    if (data['chart']['result'][0]['indicators']['quote'][0] == {}):
-        print(ticker + ' already updated')
-        return 0 
+        # Se la richiesta non presenta errori ma non sono presenti dati, significa che tutti i dati sono già stati scaricati in precedenza
+        if (data['chart']['result'][0]['indicators']['quote'][0] == {}):
+            print(ticker + ' already updated')
+            return 0 
 
-    # Parsing della risposta
-    open = data['chart']['result'][0]['indicators']['quote'][0]['open']
-    high = data['chart']['result'][0]['indicators']['quote'][0]['high']
-    low = data['chart']['result'][0]['indicators']['quote'][0]['low']
-    close = data['chart']['result'][0]['indicators']['quote'][0]['close']
-    adj_close = data['chart']['result'][0]['indicators']['adjclose'][0]['adjclose']
-    volume = data['chart']['result'][0]['indicators']['quote'][0]['volume']
+        # Parsing della risposta
+        open = data['chart']['result'][0]['indicators']['quote'][0]['open']
+        high = data['chart']['result'][0]['indicators']['quote'][0]['high']
+        low = data['chart']['result'][0]['indicators']['quote'][0]['low']
+        close = data['chart']['result'][0]['indicators']['quote'][0]['close']
+        adj_close = data['chart']['result'][0]['indicators']['adjclose'][0]['adjclose']
+        volume = data['chart']['result'][0]['indicators']['quote'][0]['volume']
 
-    timestamp = []
-    for i in data['chart']['result'][0]['timestamp']:
-        data = datetime.fromtimestamp(i)
-        data = data.strftime("%Y-%m-%dT%H:%M:%S")
-        datetimeData = pd.to_datetime(i, unit="s")
-        timestamp.append(datetimeData)
+        timestamp = []
+        for i in data['chart']['result'][0]['timestamp']:
+            data = datetime.fromtimestamp(i)
+            data = data.strftime("%Y-%m-%dT%H:%M:%S")
+            datetimeData = pd.to_datetime(i, unit="s")
+            timestamp.append(datetimeData)
 
-    myclient = pymongo.MongoClient("mongodb://{}:27017/".format(IP_MONGO_DB))
-    mydb = myclient["MarketDB"]
-    mycol = mydb[ticker]
+        myclient = pymongo.MongoClient("mongodb://{}:27017/".format(IP_MONGO_DB))
+        mydb = myclient["MarketDB"]
+        mycol = mydb[ticker]
 
-    # Si aggiungono i dati al DB, giorno per giorno, verificando che non siano già presenti dati per la stessa giornatar
-    for i in range(len(timestamp)):
-        object = {"Datetime": timestamp[i],
-                "Open": open[i],
-                "High": high[i],
-                "Low": low[i],
-                "Close": close[i],
-                "AdjClose": adj_close[i],
-                "Volume": volume[i]
-                }
-        
-        start= datetime(timestamp[i].year, timestamp[i].month, timestamp[i].day)
-        end= datetime(timestamp[i].year, timestamp[i].month, timestamp[i].day, 23, 59, 59)
-        query = {'Datetime': {'$gte': start , '$lt': end}}
-        find_date = mycol.find_one(query)
-        
-        # Se non sono presenti dati per quel determinato giorno, è possibile aggiungere quelli scaricati 
-        if (find_date == None):
-            mycol.insert_one(object) 
-        else:
-            print(ticker + " already in DB ({})".format(start.date()))
-    return 0
+        # Si aggiungono i dati al DB, giorno per giorno, verificando che non siano già presenti dati per la stessa giornatar
+        for i in range(len(timestamp)):
+            object = {"Datetime": timestamp[i],
+                    "Open": open[i],
+                    "High": high[i],
+                    "Low": low[i],
+                    "Close": close[i],
+                    "AdjClose": adj_close[i],
+                    "Volume": volume[i]
+                    }
+            
+            start= datetime(timestamp[i].year, timestamp[i].month, timestamp[i].day)
+            end= datetime(timestamp[i].year, timestamp[i].month, timestamp[i].day, 23, 59, 59)
+            query = {'Datetime': {'$gte': start , '$lt': end}}
+            find_date = mycol.find_one(query)
+            
+            # Se non sono presenti dati per quel determinato giorno, è possibile aggiungere quelli scaricati 
+            if (find_date == None):
+                mycol.insert_one(object) 
+            else:
+                print(ticker + " already in DB ({})".format(start.date()))
+        return 0
+    except JSONDecodeError as e:
+        print('Decoding JSON has failed')
 
 def get_adj_close(ticker, T):
     myclient = pymongo.MongoClient("mongodb://{}:27017/".format(IP_MONGO_DB))
