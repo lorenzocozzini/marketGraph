@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from json.decoder import JSONDecodeError
 
-IP_BROKER = 'localhost' #160.78.100.132
+IP_BROKER = '160.78.100.132'
 IP_MONGO_DB = '160.78.28.56'
 timeStart = 0
 DOWNLOAD_TYPE = 0
@@ -30,9 +30,9 @@ def delete_duplicates(arraylist):
 def download_finance(ticker, interval, period1, period2 = datetime.now()):
     period1 = int(time.mktime(period1.timetuple()))
     period2 = int(time.mktime(period2.timetuple()))
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'} #https://stackoverflow.com/questions/38489386/python-requests-403-forbidden
     query_string = f'https://query1.finance.yahoo.com/v7/finance/chart/{ticker}?period1={period1}&period2={period2}&interval={interval}&events=history&includeAdjustedClose=true'
-    print(query_string)
+    #print(query_string)
     response = requests.get(query_string, headers=headers)
     
     try:
@@ -94,14 +94,12 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
     except JSONDecodeError as e:
         print('Decoding JSON has failed')
 
-def get_adj_close(ticker, T):
+def get_adj_close(ticker, start, end):
     myclient = pymongo.MongoClient("mongodb://{}:27017/".format(IP_MONGO_DB))
     mydb = myclient["MarketDB"]
     mycol = mydb[ticker]
-    cursor = mycol.find(
-        sort = [( 'Datetime', pymongo.DESCENDING )], 
-        limit= T
-    )
+    query = {'Datetime': {'$gte': start , '$lt': end}}  
+    cursor = mycol.find(query)  #controllare se l'ordine è giusto
     last_doc = list(cursor)
     
     datetime = []
@@ -171,7 +169,7 @@ def get_threshold(correlation_list):
     print("Variance: ", r3)
 
     std = r2
-    return std
+    return 2*std
 
 def get_edges(theta, corr_list):
     edges_list=[]
