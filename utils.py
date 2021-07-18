@@ -136,7 +136,7 @@ def get_correlation(adj_close_1, adj_close_2, T):
         correlation = 0 
     return correlation
 
-def get_threshold(correlation_list):
+def get_threshold(correlation_list, start):
     
     # Estrazione delle correlazioni dalla lista
     correlation_value = []
@@ -158,7 +158,7 @@ def get_threshold(correlation_list):
     title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
     plt.title(title)
     
-    plt.savefig('histogram_gaussian.png', bbox_inches='tight')
+    plt.savefig('{}-{}.png'.format(start.year, start.month), bbox_inches='tight')
     #plt.show() 
 
     r1 = np.mean(correlation_value)

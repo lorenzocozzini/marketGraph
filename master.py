@@ -48,7 +48,7 @@ def on_evaluation_message(client, userdata, message):
 def elab_dati(correlation_list, start):
     # Calcolo della soglia per la correlazione
     print("Finding threshold...")
-    theta = get_threshold(correlation_list)
+    theta = get_threshold(correlation_list, start)
     
     # Tra tutte le correlazioni, si mantengono quelle con correlazione non inferiore alla soglia
     print("Getting edges...")
