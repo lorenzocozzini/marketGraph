@@ -1,5 +1,7 @@
 putty.exe -ssh donzelli@160.78.100.133 -pw Piero
 
+ssh donzelli@160.78.100.132
+ssh donzelli@160.78.100.134
 cd ../../sowide/donzelli_palomba2
 
 
@@ -33,4 +35,4 @@ nohup python3 node.py 7 10 > 7.txt &
 nohup python3 node.py 8 10 > 8.txt & 
 nohup python3 node.py 9 10 > 9.txt & 
 
-nohup python3 master.py 10 20 > &
+nohup python3 master.py 10 20 > masterNOTTE.txt &

@@ -9,7 +9,8 @@ from time import sleep
 
 done_msg = 0
 timeout = 9000 #due ore e mezzo, tempo massimo di attesa della risposta dei nodi
-symbol_array = get_symbol_array()
+symbol_array = []
+symbol_array.append('%5EGSPC')
 #symbol_array = symbol_array[4000:4050]
 T = int(sys.argv[2]) 
 correlation_list = []

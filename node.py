@@ -50,7 +50,7 @@ def update_data(stocklist):
             last_date = datetime(2000, 1, 1)
         
         # Scaricamento dei dati, in caso di errore, si aggiunge il ticker a una lista da restituire al master
-        if(download_finance(ticker=ticker, interval='1d', period1=last_date) == -1):
+        if(download_finance(ticker=ticker, interval='1mo', period1=last_date) == -1):
             error_list.append(ticker)
             
         bar.update(i)
