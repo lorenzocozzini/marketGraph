@@ -140,8 +140,8 @@ def on_message(client, userdata, message):
         }
         client.publish("Node", json.dumps(message)) 
         # Dopo aver calcolato le correlazioni, può terminare
-        global download_ended
-        download_ended = True
+        #global download_ended
+        #download_ended = True
     
     else: 
         print("Unknown message type")

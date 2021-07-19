@@ -62,6 +62,8 @@ def elab_dati(correlation_list, start):
         
         for tupla in edges_list:
             writer.writerow({'Source': tupla[0], 'Target': tupla[1], 'Weight': tupla[2]})
+            
+    #Scrivere anche JSON per Graph2Vec
 
 if __name__ == '__main__':
 
@@ -74,11 +76,13 @@ if __name__ == '__main__':
     
     client = mqtt.Client()
     client.connect(IP_BROKER, 9999, keepalive=7200)
+    n_nodes = int(sys.argv[1])
+    """ 
     client.publish("Master", json.dumps(message))
 
-    n_nodes = int(sys.argv[1])
+    
    
-    """ interval = start_timer()
+    interval = start_timer()
     while (done_msg < n_nodes):
         client.on_connect = on_connect
         client.on_message = on_download_message
