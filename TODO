@@ -1,6 +1,9 @@
 - NB ricorda di far chiudere porte al pc per MongoDB alla fine!
     netsh advfirewall reset
     
+FARE:
+- Valutare correttezza ed efficienza graph2Vec Model
+- Togliere data ultima perchè abbiamo 1 luglio e 18 luglio
 
 
 
