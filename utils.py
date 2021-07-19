@@ -160,7 +160,8 @@ def get_threshold(correlation_list, start):
     
     plt.savefig('{}-{}.png'.format(start.year, start.month), bbox_inches='tight')
     #plt.show() 
-
+    plt.close("all")
+    
     r1 = np.mean(correlation_value)
     print("Mean: ", r1)
     r2 = np.std(correlation_value)
