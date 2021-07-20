@@ -45,18 +45,18 @@ def dataset_reader(path):
 
 # Graph2Vec generic example
 
-#graphs = [nx.newman_watts_strogatz_graph(50, 5, 0.3) for _ in range(259)]
+graphs = [nx.newman_watts_strogatz_graph(50, 5, 0.3) for _ in range(259)]
 #da csv facciamo Json con tutti gli archi come in https://raw.githubusercontent.com/benedekrozemberczki/karateclub/master/dataset/graph_level/reddit10k/graphs.json
 #leggi tutti i csv:
 #tutti i csv in una cartella
 
 
-list = os.listdir("C:\\Users\\Utente\\Desktop\\marketGraph")
+""" list = os.listdir("C:\\Users\\Utente\\Desktop\\marketGraph")
 number_files = len(list)
 print(list) #lista di file
-print("Numero di csv",number_files)
+print("Numero di csv",number_files) """
 
-model = Graph2Vec(dimensions=dimensions, workers = 4, epochs = 20, learning_rate = 0.025, min_count =5 )
+model = Graph2Vec(dimensions=dimensions, workers = 4, epochs = 20, learning_rate = 0.025, min_count = 5)
 
 model.fit(graphs)
 #Stampo le X .. array in numpy
@@ -114,7 +114,7 @@ model.add(layers.Dense(8, activation='relu'))
 model.add(layers.Dense(1,activation='linear'))
 model.compile(loss='binary_crossentropy', optimizer='adam',metrics = ['acc'])
 
-history = model.fit(X_train, y_train, epochs=400, batch_size=200,validation_split=0.2, verbose=1)
+history = model.fit(X_train, y_train, epochs=800, batch_size=200,validation_split=0.2, verbose=1)
 test_loss,test_acc_score = model.evaluate(X_test,y_test)
 print(sqrt(test_acc_score))
 

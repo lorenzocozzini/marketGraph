@@ -9,7 +9,7 @@ from math import sqrt
 from scipy.stats import norm
 from math import sqrt
 import scipy.stats as st
-from datetime import datetime 
+from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 from json.decoder import JSONDecodeError
@@ -34,21 +34,21 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
     query_string = f'https://query1.finance.yahoo.com/v7/finance/chart/{ticker}?period1={period1}&period2={period2}&interval={interval}&events=history&includeAdjustedClose=true'
     #print(query_string)
     response = requests.get(query_string, headers=headers)
-    
+
     try:
         #print(response)
         data = json.loads(response.content.decode())
 
         # Se è presente un errore nella richiesta, si salva il ticker nella lista da mandare indietro al master
         if (data['chart']['error'] != None):
-            print(ticker + ' ' + data['chart']['error']['code']) 
+            print(ticker + ' ' + data['chart']['error']['code'])
             #if (data['chart']['error']['code']== "Bad Request"):
-            return -1 
+            return -1
 
         # Se la richiesta non presenta errori ma non sono presenti dati, significa che tutti i dati sono già stati scaricati in precedenza
         if (data['chart']['result'][0]['indicators']['quote'][0] == {}):
             print(ticker + ' already updated')
-            return 0 
+            return 0
 
         # Parsing della risposta
         open = data['chart']['result'][0]['indicators']['quote'][0]['open']
@@ -79,15 +79,15 @@ def download_finance(ticker, interval, period1, period2 = datetime.now()):
                     "AdjClose": adj_close[i],
                     "Volume": volume[i]
                     }
-            
+
             start= datetime(timestamp[i].year, timestamp[i].month, timestamp[i].day)
             end= datetime(timestamp[i].year, timestamp[i].month, timestamp[i].day, 23, 59, 59)
             query = {'Datetime': {'$gte': start , '$lt': end}}
             find_date = mycol.find_one(query)
-            
-            # Se non sono presenti dati per quel determinato giorno, è possibile aggiungere quelli scaricati 
+
+            # Se non sono presenti dati per quel determinato giorno, è possibile aggiungere quelli scaricati
             if (find_date == None):
-                mycol.insert_one(object) 
+                mycol.insert_one(object)
             else:
                 print(ticker + " already in DB ({})".format(start.date()))
         return 0
@@ -98,10 +98,10 @@ def get_adj_close(ticker, start, end):
     myclient = pymongo.MongoClient("mongodb://{}:27017/".format(IP_MONGO_DB))
     mydb = myclient["MarketDB"]
     mycol = mydb[ticker]
-    query = {'Datetime': {'$gte': start , '$lt': end}}  
+    query = {'Datetime': {'$gte': start , '$lt': end}}
     cursor = mycol.find(query)  #controllare se l'ordine è giusto
     last_doc = list(cursor)
-    
+
     datetime = []
     adj_close = []
     for j in last_doc:
@@ -110,34 +110,34 @@ def get_adj_close(ticker, start, end):
     return datetime, adj_close
 
 def get_correlation(adj_close_1, adj_close_2, T):
-  
-    # Calcolo componenti numeratore 
+
+    # Calcolo componenti numeratore
     product = [x*y for x,y in zip(adj_close_1,adj_close_2)]
     arg1 = sum(product)/T
-    
+
     r1_brack = sum(adj_close_1)/T
     r2_brack = sum(adj_close_2)/T
     arg2 = r1_brack * r2_brack
-    
-    # Calcolo componenti denominatore  
+
+    # Calcolo componenti denominatore
     r1_quad = [x*y for x,y in zip(adj_close_1,adj_close_1)]
     r2_quad = [x*y for x,y in zip(adj_close_2,adj_close_2)]
-    
+
     r1_quad_sottr = [x - (r1_brack*r1_brack) for x in r1_quad]
     r2_quad_sottr = [x - (r2_brack*r2_brack) for x in r2_quad]
-    
+
     arg3 = sum(r1_quad_sottr)/T
     arg4 = sum(r2_quad_sottr)/T
-    
+
     if (sqrt(arg3*arg4) != 0):
         correlation = (arg1 -arg2)/sqrt(arg3*arg4)
     # Se il denominatore è nullo, la correlazione è indefinita
     else:
-        correlation = 0 
+        correlation = 0
     return correlation
 
 def get_threshold(correlation_list, start):
-    
+
     # Estrazione delle correlazioni dalla lista
     correlation_value = []
     #for i in range(len(correlation_list)):
@@ -145,23 +145,29 @@ def get_threshold(correlation_list, start):
         correlation_value.append(tupla[2])
 
     # Calcolo dell'istogramma e della Gaussiana
-    mu, std = norm.fit(correlation_value) 
+    mu, std = norm.fit(correlation_value)
     plt.hist(correlation_value, density=True, bins=20, label="Data")
-    mn, mx = plt.xlim()
+    """   mn, mx = plt.xlim()
     plt.xlim(mn, mx)
     kde_xs = np.linspace(mn, mx, 30)
     kde = st.gaussian_kde(correlation_value)
-    plt.plot(kde_xs, kde.pdf(kde_xs), label="PDF")
+    plt.plot(kde_xs, kde.pdf(kde_xs), label="PDF") """
+    # Plot the PDF.
+    xmin, xmax = plt.xlim()
+    x = np.linspace(xmin, xmax, 100)
+    p = norm.pdf(x, mu, std)
+
+    plt.plot(x, p, 'k', linewidth=2)
     plt.legend(loc="upper left")
     plt.ylabel('Probability')
     plt.xlabel('Data')
     title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
     plt.title(title)
-    
-    plt.savefig('{}-{}.png'.format(start.year, start.month), bbox_inches='tight')
-    #plt.show() 
+
+    plt.savefig('{}.png'.format(start.strftime("%Y-%m"), bbox_inches='tight')
+    #plt.show()
     plt.close("all")
-    
+
     r1 = np.mean(correlation_value)
     print("Mean: ", r1)
     r2 = np.std(correlation_value)
@@ -184,7 +190,7 @@ def start_timer():
     timeStart  = time.time() * 1000 #secondi
     interval = 0
     return interval
-    
+
 def increase_timer(interval):
     global timeStart
     timeStop = time.time() * 1000
@@ -201,7 +207,7 @@ def get_symbol_array():
     for x in results:
         if x["Symbol"] not in symbol_array:
             symbol_array.append(x["Symbol"])
-    
+
     if (len(symbol_array) == 0):
         df = pd.read_csv('us_market.csv')
         symbol_array = df["Symbol"].values

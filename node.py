@@ -81,21 +81,23 @@ def evaluate_correlation(list, T):
         ticker_1 = list[i]['ticker']
         adj_close_1 = list[i]['adj_close']
         datetime_1 = list[i]['datetime']
-        print(ticker_1)
+        #print(ticker_1)
     
         # E' possibile calcolare la correlazione solo se sono presenti dati per tutto l'intervallo e non ci sono dati null
-        for j in range(i+1, len(list)):
-            ticker_2 = list[j]['ticker']
-            adj_close_2 = list[j]['adj_close']
-            datetime_2 = list[j]['datetime']
-            # E' possibile calcolare la correlazione solo se si stanno considerando i dati per le stesse giornate
-            if (datetime_1 == datetime_2):
-                # Calcolo correlazione
-                correlation = get_correlation(adj_close_1, adj_close_2, T)
-                # Aggiungo correlazione alla lista di correlazioni da restituire al master
-                corr_list.append((ticker_1, ticker_2, round(correlation, 3))) 
-            else:
-                print("Non matching dates, impossible to get correlation for {} - {}".format(ticker_1, ticker_2))
+        if (len(adj_close_1) == T):
+            for j in range(i+1, len(list)):
+                ticker_2 = list[j]['ticker']
+                adj_close_2 = list[j]['adj_close']
+                datetime_2 = list[j]['datetime']
+                # E' possibile calcolare la correlazione solo se si stanno considerando i dati per le stesse giornate
+                if (len(adj_close_2) == T):
+                    if (datetime_1 == datetime_2):
+                        # Calcolo correlazione
+                        correlation = get_correlation(adj_close_1, adj_close_2, T)
+                        # Aggiungo correlazione alla lista di correlazioni da restituire al master
+                        corr_list.append((ticker_1, ticker_2, round(correlation, 3))) 
+                    #else:
+                        #print("Non matching dates, impossible to get correlation for {} - {}".format(ticker_1, ticker_2))
 
         bar.update(b)
         sleep(0.05)
