@@ -164,7 +164,7 @@ def get_threshold(correlation_list, start):
     title = "Fit results: mu = %.2f,  std = %.2f" % (mu, std)
     plt.title(title)
 
-    plt.savefig('{}.png'.format(start.strftime("%Y-%m"), bbox_inches='tight')
+    plt.savefig('{}.png'.format(start.strftime("%Y-%m"), bbox_inches='tight'))
     #plt.show()
     plt.close("all")
 
